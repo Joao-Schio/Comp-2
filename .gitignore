@@ -1,0 +1,72 @@
+# ------------------------------------------------------------
+# CMake — builds fora da arvore de fontes
+# ------------------------------------------------------------
+/build/
+/build-*/
+/cmake-build-*/
+/out/
+
+# Arquivos gerados em configuracoes in-source (nao recomendadas)
+/CMakeFiles/
+/CMakeCache.txt
+/cmake_install.cmake
+/CTestTestfile.cmake
+/Testing/
+/install_manifest.txt
+/compile_commands.json
+/build.ninja
+/rules.ninja
+/.ninja_deps
+/.ninja_log
+
+# Preferencias locais do CMake (CMakePresets.json pode ser versionado)
+/CMakeUserPresets.json
+
+# ------------------------------------------------------------
+# Artefatos de compilacao (GCC, Clang e MSVC)
+# ------------------------------------------------------------
+*.o
+*.obj
+*.a
+*.lib
+*.so
+*.so.*
+*.dylib
+*.dll
+*.exe
+*.pdb
+*.ilk
+*.exp
+*.idb
+*.dSYM/
+
+# Executaveis locais sem extensao
+/gerador
+/lexer
+/parser
+
+# Cobertura e profiling
+*.gcda
+*.gcno
+*.gcov
+*.profraw
+*.profdata
+*.sancov
+
+# ------------------------------------------------------------
+# IDEs, sistemas operacionais e arquivos temporarios
+# ------------------------------------------------------------
+.idea/
+.vs/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+.DS_Store
+Thumbs.db
+Desktop.ini
+*.swp
+*.swo
+*~
+*.tmp
+*.bak
