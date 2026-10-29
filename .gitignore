@@ -75,3 +75,4 @@ Desktop.ini
 # Arquivos gerados pelo CMake na raiz do projeto
 /DartConfiguration.tcl
 /Makefile
+/.vscode
