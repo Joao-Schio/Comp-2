@@ -24,6 +24,7 @@ char Scanner::advance() noexcept
     while(!this -> eof())
     {
         auto caracter = this -> peek();
+        this->_posicao++;
         if (caracter == '\n')
         {
             this -> _linha++;
@@ -35,7 +36,6 @@ char Scanner::advance() noexcept
         }
         if (!std::isspace(caracter))
         {
-            this -> _posicao++;
             return caracter;
         }
     }
