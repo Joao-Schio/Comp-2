@@ -48,9 +48,38 @@ common::Posicao Scanner::posicao() const noexcept
     };
 }
 
+std::optional<ErroLexico> Lexer::pular_ignoraveis()
+{
+    while (!_scanner.eof())
+    {
+        auto caractere = _scanner.peek();
+        if (!std::isspace(caractere))
+        {
+            return std::nullopt;
+        }
+        _scanner.advance();
+        if (caractere == '(' && _scanner.peek() == '*')
+        {
+            this -> pular_comentarios();
+        }
+    }   
+}
 
-std::expected<Token, ErroLexico>
-Lexer::get_prox_token()
+std::optional<ErroLexico> Lexer::pular_comentarios()
+{
+    while(!_scanner.eof())
+    {
+        auto caractere = _scanner.advance();
+        if (caractere == '*' && _scanner.peek() == ')')
+        {
+            _scanner.advance();
+            return std::nullopt;
+        }
+    }
+    return ErroLexico::eof_inesperado(_scanner.posicao());
+}
+
+std::expected<Token, ErroLexico> Lexer::get_prox_token()
 {
 
 
@@ -65,8 +94,10 @@ Lexer::get_prox_token()
                 ._fim = inicio}};
     }
 
+    this -> pular_ignoraveis();
     const char caracter = _scanner.peek();
     
+
     auto is_simbolo = this -> ler_simbolo(caracter, inicio);
     if (is_simbolo.has_value())
     {

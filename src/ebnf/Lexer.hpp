@@ -45,6 +45,15 @@ struct ErroLexico
                 "caractere invalido '{}'", caracter),
             .posicao = posicao};
     }
+
+    static ErroLexico eof_inesperado(common::Posicao posicao)
+    {
+        return 
+        {
+           .mensagem = "EOF inesperado",
+           .posicao = posicao  
+        };
+    }
 };
 
 class Lexer
@@ -94,6 +103,9 @@ class Lexer
 
         [[nodiscard]] std::optional<ErroLexico>
             pular_ignoraveis();
+
+        [[nodiscard]] std::optional<ErroLexico>
+            pular_comentarios();
 
         [[nodiscard]] std::expected<Token, ErroLexico>
             ler_identificador(common::Posicao inicio);
