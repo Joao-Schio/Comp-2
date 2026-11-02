@@ -1,5 +1,18 @@
 #include "src/ebnf/Lexer.hpp"
 
+#define EBNF_SYMBOLS(X)    \
+    X('=', Igual)          \
+    X(';', PontoVirgula)   \
+    X('|', Alternativa)    \
+    X('{', AbreChave)      \
+    X('}', FechaChave)     \
+    X('[', AbreColchete)   \
+    X(']', FechaColchete)  \
+    X('(', AbreParenteses) \
+    X(')', FechaParenteses)
+#define SYMBOL_CASE(ch, name) \
+    case ch:                  \
+        return ler_simbolo(Simbolo::name, inicio);
 namespace compiladores::ebnf
 {
 char Scanner::peek() const noexcept
@@ -50,5 +63,45 @@ common::Posicao Scanner::posicao() const noexcept
         .linha = _linha,
         .coluna = _coluna
     };
+}
+
+
+Token Lexer::ler_simbolo(Simbolo simbolo, common::Posicao posicao)
+{
+    _scanner.advance();
+    return Token{
+        .tipo = simbolo,
+        .localizacao =
+            {
+                ._inicio = posicao,
+                ._fim = _scanner.posicao()}};
+}
+
+std::expected<Token, ErroLexico>
+Lexer::get_prox_token()
+{
+    const auto inicio = _scanner.posicao();
+
+    if (_scanner.eof())
+    {
+        return Token{
+            .tipo = Eof{},
+            .localizacao = {
+                ._inicio = inicio,
+                ._fim = inicio}};
+    }
+
+    const char caracter = _scanner.peek();
+
+    switch (caracter)
+    {
+        EBNF_SYMBOLS(SYMBOL_CASE)
+        default:
+            break;
+    }
+
+    
+    return std::unexpected(
+        ErroLexico::caracter_invalido(caracter, inicio));
 }
 }

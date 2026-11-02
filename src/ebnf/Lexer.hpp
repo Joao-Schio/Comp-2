@@ -1,8 +1,9 @@
 #pragma once
 
 #include <string>
-#include <sstream>
-#include <fstream>
+#include <expected>
+#include <optional>
+#include <format>
 #include "src/ebnf/Token.hpp"
 
 namespace compiladores::ebnf
@@ -29,16 +30,53 @@ class Scanner
         [[nodiscard]] common::Posicao posicao() const noexcept;
 };
 
+
+struct ErroLexico
+{
+    std::string mensagem;
+    common::Posicao posicao;
+    static ErroLexico caracter_invalido(
+        char caracter,
+        common::Posicao posicao)
+    {
+        return {
+            .mensagem = std::format(
+                "caractere invalido '{}'", caracter),
+            .posicao = posicao};
+    }
+};
+
 class Lexer
 {
     private:
         Scanner _scanner;
+    private:
+        [[nodiscard]] Token criar_token(
+            TokenType tipo,
+            common::Posicao inicio) const;
+
+        [[nodiscard]] std::optional<ErroLexico>
+            pular_ignoraveis();
+
+        [[nodiscard]] std::expected<Token, ErroLexico>
+            ler_identificador(common::Posicao inicio);
+
+        [[nodiscard]] std::expected<Token, ErroLexico>
+            ler_literal(common::Posicao inicio);
+
+        [[nodiscard]] std::expected<Token, ErroLexico>
+            ler_regex(common::Posicao inicio);
+    private:    
+        [[nodiscard]] Token
+            ler_simbolo(Simbolo simbolo, common::Posicao inicio);
+
     public:
         Lexer(Scanner scanner) : _scanner(std::move(scanner))
         {
 
         }
 
-        compiladores::ebnf::Token get_prox_token();
+        [[nodiscard]]
+            std::expected<Token, ErroLexico> get_prox_token();
 };
 }
