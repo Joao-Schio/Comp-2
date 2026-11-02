@@ -11,31 +11,22 @@ namespace compiladores::ebnf
 class Scanner
 {
     private:
-        std::ifstream _arquivo;
-        bool _acabou;
-        std::string _arquivo_str;
-        size_t _pos;
+        std::string _fonte;
+        std::size_t _posicao{0};
+        std::size_t _linha{1};
+        std::size_t _coluna{1};
 
     public:
-        Scanner(std::ifstream &&arquivo) : _arquivo(std::move(arquivo)),
-                                           _acabou(false),
-                                           _arquivo_str(""),
-                                           _pos(0)
+        explicit Scanner(std::string fonte)
+            : _fonte(std::move(fonte))
         {
-            if (!_arquivo)
-            {
-                throw std::runtime_error("Arquivo foi não pode ser lido");
-            }
-            std::ostringstream buffer;
-            buffer << _arquivo.rdbuf();
-            _arquivo_str = std::move(buffer).str();
         }
-        char get_next();
-        char peek_next() const;
-        bool get_termino() const
-        {
-            return _acabou;
-        }
+
+        [[nodiscard]] char peek() const noexcept;
+        char advance() noexcept;
+
+        [[nodiscard]] bool eof() const noexcept;
+        [[nodiscard]] common::Posicao posicao() const noexcept;
 };
 
 class Lexer
