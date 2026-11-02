@@ -1,18 +1,4 @@
 #include "src/ebnf/Lexer.hpp"
-
-#define EBNF_SYMBOLS(X)    \
-    X('=', Igual)          \
-    X(';', PontoVirgula)   \
-    X('|', Alternativa)    \
-    X('{', AbreChave)      \
-    X('}', FechaChave)     \
-    X('[', AbreColchete)   \
-    X(']', FechaColchete)  \
-    X('(', AbreParenteses) \
-    X(')', FechaParenteses)
-#define SYMBOL_CASE(ch, name) \
-    case ch:                  \
-        return ler_simbolo(Simbolo::name, inicio);
 namespace compiladores::ebnf
 {
 char Scanner::peek() const noexcept
@@ -92,12 +78,11 @@ Lexer::get_prox_token()
     }
 
     const char caracter = _scanner.peek();
-
-    switch (caracter)
+    
+    auto is_simbolo = this -> ler_simbolo(caracter, inicio);
+    if (is_simbolo.has_value())
     {
-        EBNF_SYMBOLS(SYMBOL_CASE)
-        default:
-            break;
+        return std::move(*is_simbolo);
     }
 
     

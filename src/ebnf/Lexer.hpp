@@ -4,6 +4,7 @@
 #include <expected>
 #include <optional>
 #include <format>
+#include <unordered_map>
 #include "src/ebnf/Token.hpp"
 
 namespace compiladores::ebnf
@@ -50,6 +51,42 @@ class Lexer
 {
     private:
         Scanner _scanner;
+
+    private:
+        inline static const std::unordered_map<char, Simbolo> simbolos = {
+            {'=', Simbolo::Igual},
+            {';', Simbolo::PontoVirgula},
+            {'|', Simbolo::Alternativa},
+            {'{', Simbolo::AbreChave},
+            {'}', Simbolo::FechaChave},
+            {'[', Simbolo::AbreColchete},
+            {']', Simbolo::FechaColchete},
+            {'(', Simbolo::AbreParenteses},
+            {')', Simbolo::FechaParenteses}};
+        
+        inline
+        std::optional<Token> ler_simbolo(char caractere, common::Posicao inicio) 
+        {
+            auto simbolo = simbolos.find(caractere);
+            if (simbolo == simbolos.end())
+            {
+                return std::nullopt;
+            }
+            else
+            {
+                _scanner.advance();
+                return Token
+                {
+                    .tipo = simbolo -> second,
+                    .localizacao = 
+                    {
+                        ._inicio = inicio,
+                        ._fim = _scanner.posicao()
+                    }
+                };
+            }
+        }
+
     private:
         [[nodiscard]] Token criar_token(
             TokenType tipo,
