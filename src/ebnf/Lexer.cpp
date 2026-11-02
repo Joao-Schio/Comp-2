@@ -20,25 +20,22 @@ bool Scanner::eof() const noexcept
 
 char Scanner::advance() noexcept
 {
-    while(!this -> eof())
+    if (this -> eof())
     {
-        auto caracter = this -> peek();
-        this->_posicao++;
-        if (caracter == '\n')
-        {
-            this -> _linha++;
-            this -> _coluna = 1;
-        }
-        else
-        {
-            this -> _coluna++;    
-        }
-        if (!std::isspace(caracter))
-        {
-            return caracter;
-        }
+        return '\0';
     }
-    return '\0';
+    auto saida = this -> peek();
+    _posicao++;
+    if (saida == '\n')
+    {
+        _coluna = 1;
+        _linha++;
+    }
+    else
+    {
+        _coluna++;
+    }
+    return saida;
 }
 
 common::Posicao Scanner::posicao() const noexcept
@@ -52,20 +49,11 @@ common::Posicao Scanner::posicao() const noexcept
 }
 
 
-Token Lexer::ler_simbolo(Simbolo simbolo, common::Posicao posicao)
-{
-    _scanner.advance();
-    return Token{
-        .tipo = simbolo,
-        .localizacao =
-            {
-                ._inicio = posicao,
-                ._fim = _scanner.posicao()}};
-}
-
 std::expected<Token, ErroLexico>
 Lexer::get_prox_token()
 {
+
+
     const auto inicio = _scanner.posicao();
 
     if (_scanner.eof())

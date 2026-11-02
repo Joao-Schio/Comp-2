@@ -103,9 +103,6 @@ class Lexer
 
         [[nodiscard]] std::expected<Token, ErroLexico>
             ler_regex(common::Posicao inicio);
-    private:    
-        [[nodiscard]] Token
-            ler_simbolo(Simbolo simbolo, common::Posicao inicio);
 
     public:
         Lexer(Scanner scanner) : _scanner(std::move(scanner))
