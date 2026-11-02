@@ -1,22 +1,19 @@
+
 #pragma once
 
 #include <string>
-#include <string_view>
 #include <variant>
-#include <memory>
-#include "src/common/Localizacao.hpp"
+
+#include "common/Localizacao.hpp"
 
 namespace compiladores::ebnf
 {
-
 struct Eof
 {
-    std::string_view lexama{"EOF"};
 };
-
 struct Terminal
 {
-    std::string lexema;    
+    std::string lexema;
 };
 
 struct NaoTerminal
@@ -24,15 +21,23 @@ struct NaoTerminal
     std::string lexema;
 };
 
-struct ExpressaoRegular
+struct Literal
 {
-    std::string lexema;
+    std::string valor;
 };
 
-enum class PalavraReservada 
+
+struct ExpressaoRegular
+{
+    std::string padrao;
+};
+
+
+enum class Simbolo
 {
     Igual,
     PontoVirgula,
+    Alternativa,
     AbreChave,
     FechaChave,
     AbreColchete,
@@ -41,19 +46,29 @@ enum class PalavraReservada
     FechaParenteses
 };
 
-using TokenType = std::variant<Eof, 
-                        Terminal,
-                        NaoTerminal,
-                        ExpressaoRegular, 
-                        PalavraReservada>;
 
-using compiladores::common::Localizacao;
-
-class Token
+enum class PalavraReservada
 {
-    private:
-        TokenType _tipo;
-        Localizacao _localizacao;
-            
+    Tokens,
+    Rules,
+    Skip,
+    Extern
+};
+
+
+using TokenType = std::variant<
+    Eof,
+    Terminal,
+    NaoTerminal,
+    Literal,
+    ExpressaoRegular,
+    Simbolo,
+    PalavraReservada>;
+
+
+struct Token
+{
+    TokenType tipo;
+    common::Localizacao localizacao;
 };
 }
