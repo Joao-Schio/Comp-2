@@ -74,6 +74,13 @@ class Lexer
             {']', Simbolo::FechaColchete},
             {'(', Simbolo::AbreParenteses},
             {')', Simbolo::FechaParenteses}};
+
+        inline static const std::unordered_map<std::string_view, PalavraReservada>
+            palavras_reservadas = {
+                {"TOKENS", PalavraReservada::Tokens},
+                {"RULES", PalavraReservada::Rules},
+                {"SKIP", PalavraReservada::Skip},
+                {"EXTERN", PalavraReservada::Extern}};
         
         inline
         std::optional<Token> ler_simbolo(char caractere, common::Posicao inicio) 
@@ -96,6 +103,25 @@ class Lexer
                     }
                 };
             }
+        }
+
+        inline
+        std::optional<Token> ler_palavra_reservada(const std::string_view palavra, common::Posicao inicio)
+        {
+            auto mapa = palavras_reservadas.find(palavra);
+            if (mapa == palavras_reservadas.end())
+            {
+                return std::nullopt;
+            }
+            return Token
+            {
+                .tipo = mapa -> second,
+                .localizacao = 
+                {
+                    ._inicio = inicio,
+                    ._fim = _scanner.posicao()
+                }
+            };
         }
 
     private:

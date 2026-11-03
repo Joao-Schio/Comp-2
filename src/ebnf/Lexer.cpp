@@ -109,6 +109,53 @@ std::optional<ErroLexico> Lexer::pular_comentarios()
 }
 
 std::expected<Token, ErroLexico>
+Lexer::ler_identificador(common::Posicao inicio)
+{
+    std::string identificador{};
+    while(!_scanner.eof() && !std::isspace(_scanner.peek()))
+    {
+        identificador.push_back(_scanner.advance());
+    }
+    if (_scanner.eof())
+    {
+        return std::unexpected(ErroLexico::eof_inesperado(inicio));
+    }
+    auto palavra_reservada = this -> ler_palavra_reservada(identificador, inicio);
+    if (palavra_reservada.has_value())
+    {
+        return std::move(*palavra_reservada);
+    }
+    if (std::isupper(identificador.at(0)))
+    {
+        return Token
+        {
+            .tipo = NaoTerminal
+            {
+                .lexema = std::move(identificador)
+            },
+            .localizacao =
+            {
+                ._inicio = inicio,
+                ._fim = _scanner.posicao()
+            }
+        };
+    }
+    return Token
+    {
+        .tipo = Terminal
+        {
+            .lexema = std::move(identificador)
+        },
+        .localizacao = 
+        {
+            ._inicio = inicio, 
+            ._fim = _scanner.posicao()
+        }
+    };
+}
+
+
+std::expected<Token, ErroLexico>
 Lexer::get_prox_token()
 {
     if (auto erro = this -> pular_ignoraveis())
