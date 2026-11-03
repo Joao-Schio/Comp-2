@@ -42,11 +42,11 @@ char Scanner::advance() noexcept
     return saida;
 }
 
-char Scanner::advance(std::size_t count) noexcept
+char Scanner::advance(std::size_t offset) noexcept
 {
     char ultimo = '\0';
 
-    for (std::size_t i = 0; i < count && !this -> eof(); i++)
+    for (std::size_t i = 0; i < offset && !this->eof(); i++)
     {
         ultimo = this->advance();
     }
