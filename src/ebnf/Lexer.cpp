@@ -114,7 +114,8 @@ Lexer::ler_identificador(common::Posicao inicio)
     std::string identificador{};
     while(!_scanner.eof())
     {
-        if (_scanner.peek() == ';' || std::isspace(_scanner.peek()))
+        const auto c = static_cast<unsigned char>(_scanner.peek());
+        if (!std::isalnum(c) && c != '_')
         {
             break;
         }
