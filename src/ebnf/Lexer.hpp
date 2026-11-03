@@ -1,13 +1,16 @@
 #pragma once
 
 #include <string>
+#include <string_view>
+#include <algorithm>
+#include <cctype>
 #include <expected>
 #include <optional>
 #include <format>
 #include <unordered_map>
 #include "src/ebnf/Token.hpp"
 
-namespace compiladores::ebnf
+    namespace compiladores::ebnf
 {
 
 class Scanner

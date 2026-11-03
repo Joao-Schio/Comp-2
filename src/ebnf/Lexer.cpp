@@ -112,24 +112,48 @@ std::expected<Token, ErroLexico>
 Lexer::ler_identificador(common::Posicao inicio)
 {
     std::string identificador{};
-    while(!_scanner.eof() && !std::isspace(_scanner.peek()))
+    while(!_scanner.eof())
     {
+        if (_scanner.peek() == ';' || std::isspace(_scanner.peek()))
+        {
+            break;
+        }
         identificador.push_back(_scanner.advance());
     }
-    if (_scanner.eof())
+    
+    auto comeca_minuscula = std::islower(identificador.at(0));
+    if (!comeca_minuscula)
     {
-        return std::unexpected(ErroLexico::eof_inesperado(inicio));
+        const bool contem_minuscula = std::ranges::any_of(
+            identificador,
+            [](unsigned char c)
+            {
+                return std::islower(c) != 0;
+            });
+
+        if (contem_minuscula)
+        {
+            return std::unexpected(
+                ErroLexico
+                {
+                    .mensagem = std::format(
+                        "identificador '{}' invalido",
+                        identificador),
+                    .posicao = inicio
+                });
+        }
     }
+
     auto palavra_reservada = this -> ler_palavra_reservada(identificador, inicio);
     if (palavra_reservada.has_value())
     {
         return std::move(*palavra_reservada);
     }
-    if (std::isupper(identificador.at(0)))
+    if (comeca_minuscula)
     {
         return Token
         {
-            .tipo = NaoTerminal
+            .tipo = Terminal
             {
                 .lexema = std::move(identificador)
             },
@@ -142,7 +166,7 @@ Lexer::ler_identificador(common::Posicao inicio)
     }
     return Token
     {
-        .tipo = Terminal
+        .tipo = NaoTerminal
         {
             .lexema = std::move(identificador)
         },
