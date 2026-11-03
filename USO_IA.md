@@ -23,3 +23,9 @@ Ferramenta:
     Trecho: .gitignore
     Finalidade: Solicitei a geração de um arquivo .gitignore para a nova estrutura do projeto em C++23, utilizando CMake e visando compatibilidade com GCC, Clang e MSVC. O objetivo é ignorar diretórios de compilação, binários, arquivos temporários e configurações locais, sem excluir código-fonte, testes ou arquivos necessários à entrega.
     O que fiz: [Preencher após revisar e aplicar: utilizado integralmente, adaptado ou apenas consultado.]
+
+Ferramenta:
+    ChatGPT (GPT-6)
+    Trecho: CMakeLists.txt
+    Finalidade: Atualizar a configuração CMake para incluir src/ebnf/Lexer.cpp na compilação do executável gerador e permitir os caminhos de include já utilizados pelo código C++23, sem alterar a implementação do lexer.
+    O que fiz: Modificações geradas pela IA e propostas em pull request para revisão antes da integração. A entrada anterior sobre a criação original do CMakeLists.txt foi preservada.
