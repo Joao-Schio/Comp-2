@@ -25,8 +25,10 @@ class Scanner
         }
 
         [[nodiscard]] char peek() const noexcept;
-        char advance() noexcept;
+        [[nodiscard]] char peek(std::size_t offset) const noexcept;
 
+        char advance() noexcept;
+        char advance(std::size_t offset) noexcept;
         [[nodiscard]] bool eof() const noexcept;
         [[nodiscard]] common::Posicao posicao() const noexcept;
 };

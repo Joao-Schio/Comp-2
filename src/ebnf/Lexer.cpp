@@ -3,14 +3,18 @@ namespace compiladores::ebnf
 {
 char Scanner::peek() const noexcept
 {
-    if (this -> eof())
+    // a versao com offset veio depois
+    // e eu nao queria quebrar as dependencias ja existentes
+    return this -> peek(0);
+}
+char Scanner::peek(std::size_t offset) const noexcept
+{
+    if (offset >= _fonte.size() - _posicao)
     {
         return '\0';
     }
-    else
-    {
-        return this -> _fonte[_posicao];
-    }
+
+    return _fonte[_posicao + offset];
 }
 
 bool Scanner::eof() const noexcept
@@ -38,6 +42,18 @@ char Scanner::advance() noexcept
     return saida;
 }
 
+char Scanner::advance(std::size_t count) noexcept
+{
+    char ultimo = '\0';
+
+    for (std::size_t i = 0; i < count && !this -> eof(); i++)
+    {
+        ultimo = this->advance();
+    }
+
+    return ultimo;
+}
+
 common::Posicao Scanner::posicao() const noexcept
 {
     return 
@@ -52,17 +68,30 @@ std::optional<ErroLexico> Lexer::pular_ignoraveis()
 {
     while (!_scanner.eof())
     {
-        auto caractere = _scanner.peek();
-        if (!std::isspace(caractere))
+        const char c = _scanner.peek();
+
+        if (std::isspace(static_cast<unsigned char>(c)))
         {
-            return std::nullopt;
+            _scanner.advance();
+            continue;
         }
-        _scanner.advance();
-        if (caractere == '(' && _scanner.peek() == '*')
+
+        if (c == '(' && _scanner.peek(1) == '*')
         {
-            this -> pular_comentarios();
+            _scanner.advance(2);
+
+            if (auto erro = pular_comentarios())
+            {
+                return erro;
+            }
+
+            continue;
         }
-    }   
+
+        break;
+    }
+
+    return std::nullopt;
 }
 
 std::optional<ErroLexico> Lexer::pular_comentarios()
@@ -79,9 +108,13 @@ std::optional<ErroLexico> Lexer::pular_comentarios()
     return ErroLexico::eof_inesperado(_scanner.posicao());
 }
 
-std::expected<Token, ErroLexico> Lexer::get_prox_token()
+std::expected<Token, ErroLexico>
+Lexer::get_prox_token()
 {
-
+    if (auto erro = this -> pular_ignoraveis())
+    {
+        return std::unexpected(std::move(*erro));
+    }
 
     const auto inicio = _scanner.posicao();
 
@@ -94,17 +127,15 @@ std::expected<Token, ErroLexico> Lexer::get_prox_token()
                 ._fim = inicio}};
     }
 
-    this -> pular_ignoraveis();
     const char caracter = _scanner.peek();
-    
 
-    auto is_simbolo = this -> ler_simbolo(caracter, inicio);
-    if (is_simbolo.has_value())
+    auto simbolo = this -> ler_simbolo(caracter, inicio);
+
+    if (simbolo)
     {
-        return std::move(*is_simbolo);
+        return std::move(*simbolo);
     }
 
-    
     return std::unexpected(
         ErroLexico::caracter_invalido(caracter, inicio));
 }
