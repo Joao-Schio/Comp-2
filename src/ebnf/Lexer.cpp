@@ -153,7 +153,7 @@ Lexer::ler_identificador(common::Posicao inicio)
     {
         return Token
         {
-            .tipo = Terminal
+            .tipo = NaoTerminal
             {
                 .lexema = std::move(identificador)
             },
@@ -166,7 +166,7 @@ Lexer::ler_identificador(common::Posicao inicio)
     }
     return Token
     {
-        .tipo = NaoTerminal
+        .tipo = Terminal
         {
             .lexema = std::move(identificador)
         },
