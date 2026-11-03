@@ -10,9 +10,10 @@ endif()
 
 add_executable(gerador
     src/main.cpp
+    src/ebnf/Lexer.cpp
 )
 
-# Conforme os modulos forem implementados, adicionar os respectivos .cpp
+# Conforme os modulos forem implementados, adicionar novos .cpp
 # explicitamente na lista de fontes acima.
 set_target_properties(gerador PROPERTIES
     CXX_STANDARD 23
@@ -20,7 +21,10 @@ set_target_properties(gerador PROPERTIES
     CXX_EXTENSIONS NO
 )
 
+# Os includes atuais usam tanto "src/ebnf/..." quanto "common/...".
+# Mantemos ambos os caminhos ate padronizar os includes no codigo-fonte.
 target_include_directories(gerador PRIVATE
+    "${CMAKE_CURRENT_SOURCE_DIR}"
     "${CMAKE_CURRENT_SOURCE_DIR}/src"
 )
 
