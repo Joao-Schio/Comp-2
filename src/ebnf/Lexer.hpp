@@ -141,6 +141,7 @@ class Lexer
             };
         }
 
+        [[nodiscard]]
         inline
         std::expected<char, ErroLexico> casa(std::string_view esperados, common::Posicao posicao) const
         {

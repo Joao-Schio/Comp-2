@@ -180,10 +180,39 @@ Lexer::ler_identificador(common::Posicao inicio)
 }
 
 std::expected<Token, ErroLexico>
-Lexer::ler_literal(common::Posicao posicao)
+Lexer::ler_literal(common::Posicao inicio)
 {
-    
-    
+    auto encontrado = this -> casa("'\"", inicio);
+    if (!encontrado.has_value())
+    {
+        return std::unexpected(
+            std::move(encontrado.error())
+        );
+    }
+    _scanner.advance();
+    std::string literal{};
+    while (!_scanner.eof())
+    {
+        char letra = _scanner.peek();
+        if (letra == *encontrado)
+        {
+            break;
+        }
+        literal.push_back(_scanner.advance());
+    }
+    _scanner.advance();
+    return Token
+    {
+        .tipo = Literal
+        {
+            .valor = std::move(literal)
+        },
+        .localizacao = common::Localizacao
+        {
+            ._inicio = inicio,
+            ._fim = _scanner.posicao()
+        }
+    };
 }
 
 
