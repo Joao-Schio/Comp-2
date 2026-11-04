@@ -72,6 +72,15 @@ struct ErroLexico
             .posicao = posicao
         };
     }
+
+    static ErroLexico literal_nao_terminado(common::Posicao posicao)
+    {
+        return 
+        {
+            .mensagem = "literal nao terminado",
+            .posicao = posicao
+        };
+    }
 };
 
 class Lexer

@@ -184,9 +184,9 @@ Lexer::ler_escape(common::Posicao inicio)
 {
     if (_scanner.eof() || _scanner.peek() == '\n')
     {
-        return std::unexpected(ErroLexico{
-            .mensagem = "literal nao terminado",
-            .posicao = inicio});
+        return std::unexpected(
+            ErroLexico::literal_nao_terminado(inicio)
+        );
     }
 
     const auto posicao = _scanner.posicao();
@@ -236,9 +236,7 @@ Lexer::ler_conteudo_literal(
 
         if (caracter == '\n')
         {
-            return std::unexpected(ErroLexico{
-                .mensagem = "literal nao terminado",
-                .posicao = inicio});
+            return std::unexpected(ErroLexico::literal_nao_terminado(inicio));
         }
 
         if (caracter == '\\')
