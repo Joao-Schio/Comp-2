@@ -65,10 +65,9 @@ struct ErroLexico
         return 
         {
             .mensagem = std::format(
-                "Esperava-se {}, encontrou {}, em {}",
+                "Esperava-se {}, encontrou {}",
                 esperados,
-                caracter_achado,
-                posicao
+                caracter_achado
             ),
             .posicao = posicao
         };
