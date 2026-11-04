@@ -179,6 +179,14 @@ Lexer::ler_identificador(common::Posicao inicio)
     };
 }
 
+std::expected<Token, ErroLexico>
+Lexer::ler_literal(common::Posicao posicao)
+{
+    
+    
+}
+
+
 
 std::expected<Token, ErroLexico>
 Lexer::get_prox_token()

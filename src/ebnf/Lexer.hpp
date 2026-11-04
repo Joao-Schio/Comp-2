@@ -59,6 +59,20 @@ struct ErroLexico
            .posicao = posicao  
         };
     }
+
+    static ErroLexico caracter_inesperado(std::string_view esperados, char caracter_achado, common::Posicao posicao)
+    {
+        return 
+        {
+            .mensagem = std::format(
+                "Esperava-se {}, encontrou {}, em {}",
+                esperados,
+                caracter_achado,
+                posicao
+            ),
+            .posicao = posicao
+        };
+    }
 };
 
 class Lexer
@@ -125,6 +139,19 @@ class Lexer
                     ._fim = _scanner.posicao()
                 }
             };
+        }
+
+        inline
+        std::expected<char, ErroLexico> casa(std::string_view esperados, common::Posicao posicao) const
+        {
+            const auto caracter = _scanner.peek();
+            if (esperados.contains(caracter))
+            {
+                return caracter;
+            }
+            return std::unexpected(
+                ErroLexico::caracter_inesperado(esperados, caracter, posicao)
+            );
         }
 
     private:
