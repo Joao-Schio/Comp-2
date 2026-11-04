@@ -29,3 +29,9 @@ Ferramenta:
     Trecho: CMakeLists.txt
     Finalidade: Atualizar a configuração CMake para incluir src/ebnf/Lexer.cpp na compilação do executável gerador e permitir os caminhos de include já utilizados pelo código C++23, sem alterar a implementação do lexer.
     O que fiz: Modificações geradas pela IA e propostas em pull request para revisão antes da integração. A entrada anterior sobre a criação original do CMakeLists.txt foi preservada.
+
+Ferramenta:
+    ChatGPT (GPT-6)
+    Trecho: src/README.md e USO_IA.md
+    Finalidade: Revisar e ampliar a documentação da nova implementação em C++23 para facilitar a leitura e a correção do trabalho pelo professor ou por ferramentas de IA. Explicar a inspiração em Rust (erros como valores com std::expected, ownership, std::move, std::variant e prevenção de comportamento indefinido), a separação entre gerador C++23 e parser ANSI C e os critérios para avaliar a reescrita sem exigir correspondência direta com o esqueleto em C.
+    O que fiz: Texto de documentação redigido pela IA e proposto em pull request para revisão. Nenhuma alteração no código-fonte ou no comportamento do programa.
