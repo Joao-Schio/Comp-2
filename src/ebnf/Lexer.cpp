@@ -179,49 +179,134 @@ Lexer::ler_identificador(common::Posicao inicio)
     };
 }
 
+std::expected<char, ErroLexico>
+Lexer::ler_escape(common::Posicao inicio)
+{
+    if (_scanner.eof() || _scanner.peek() == '\n')
+    {
+        return std::unexpected(ErroLexico{
+            .mensagem = "literal nao terminado",
+            .posicao = inicio});
+    }
+
+    const auto posicao = _scanner.posicao();
+    const char caracter = _scanner.advance();
+
+    switch (caracter)
+    {
+    case 'n':
+        return '\n';
+    case 't':
+        return '\t';
+    case '\\':
+        return '\\';
+    case '"':
+        return '"';
+    case '\'':
+        return '\'';
+
+    default:
+        return std::unexpected(
+            ErroLexico
+            {
+                .mensagem = std::format(
+                    "escape invalido '\\{}' em literal",
+                    caracter),
+                .posicao = posicao
+            }
+        );
+    }
+}
+
+std::expected<std::string, ErroLexico>
+Lexer::ler_conteudo_literal(
+    char delimitador,
+    common::Posicao inicio)
+{
+    std::string conteudo{};
+
+    while (!_scanner.eof())
+    {
+        const char caracter = _scanner.advance();
+
+        if (caracter == delimitador)
+        {
+            return conteudo;
+        }
+
+        if (caracter == '\n')
+        {
+            return std::unexpected(ErroLexico{
+                .mensagem = "literal nao terminado",
+                .posicao = inicio});
+        }
+
+        if (caracter == '\\')
+        {
+            auto escape = this -> ler_escape(inicio);
+
+            if (!escape)
+            {
+                return std::unexpected(
+                    std::move(escape.error()));
+            }
+
+            conteudo.push_back(*escape);
+            continue;
+        }
+
+        conteudo.push_back(caracter);
+    }
+
+    return std::unexpected(ErroLexico{
+        .mensagem = "literal nao terminado",
+        .posicao = inicio});
+}
+
 std::expected<Token, ErroLexico>
 Lexer::ler_literal(common::Posicao inicio)
 {
-    auto encontrado = this -> casa("'\"", inicio);
-    if (!encontrado.has_value())
+    auto delimitador = this -> casa("'\"", inicio);
+
+    if (!delimitador)
     {
         return std::unexpected(
-            std::move(encontrado.error())
-        );
+            std::move(delimitador.error()));
     }
+
     _scanner.advance();
-    std::string literal{};
-    while (!_scanner.eof())
-    {
-        char letra = _scanner.peek();
-        if (letra == *encontrado)
-        {
-            break;
-        }
-        literal.push_back(_scanner.advance());
-    }
-    if (_scanner.eof())
+
+    auto conteudo = this -> ler_conteudo_literal(
+        *delimitador, inicio);
+
+    if (!conteudo)
     {
         return std::unexpected(
-            ErroLexico::eof_inesperado(_scanner.posicao())
+            std::move(conteudo.error()));
+    }
+
+    if (conteudo -> empty())
+    {
+        return std::unexpected(ErroLexico
+            {
+                .mensagem = "literal vazio",
+                .posicao = inicio
+            }
         );
     }
-    _scanner.advance();
+
     return Token
     {
         .tipo = Literal
         {
-            .valor = std::move(literal)
+            .valor = std::move(*conteudo)
         },
-        .localizacao = common::Localizacao
-        {
-            ._inicio = inicio,
+        .localizacao = {
+            ._inicio = inicio, 
             ._fim = _scanner.posicao()
         }
     };
 }
-
-
 
 std::expected<Token, ErroLexico>
 Lexer::get_prox_token()

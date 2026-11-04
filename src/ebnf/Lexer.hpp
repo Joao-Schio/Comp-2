@@ -154,10 +154,16 @@ class Lexer
             );
         }
 
-    private:
+        std::expected<std::string, ErroLexico>
+            ler_conteudo_literal(char delimitador, common::Posicao inicio);
+
+        std::expected<char, ErroLexico>
+            ler_escape(common::Posicao inicio);
+
+    private : 
         [[nodiscard]] Token criar_token(
-            TokenType tipo,
-            common::Posicao inicio) const;
+                      TokenType tipo,
+                      common::Posicao inicio) const;
 
         [[nodiscard]] std::optional<ErroLexico>
             pular_ignoraveis();
