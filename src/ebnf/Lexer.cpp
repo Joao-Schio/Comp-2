@@ -200,6 +200,12 @@ Lexer::ler_literal(common::Posicao inicio)
         }
         literal.push_back(_scanner.advance());
     }
+    if (_scanner.eof())
+    {
+        return std::unexpected(
+            ErroLexico::eof_inesperado(_scanner.posicao())
+        );
+    }
     _scanner.advance();
     return Token
     {
