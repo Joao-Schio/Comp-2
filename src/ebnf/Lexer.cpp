@@ -202,11 +202,16 @@ Lexer::get_prox_token()
     const char caracter = _scanner.peek();
 
     auto simbolo = this -> ler_simbolo(caracter, inicio);
-
     if (simbolo)
     {
         return std::move(*simbolo);
     }
+
+    if (std::isalpha(caracter) || caracter == '_')
+    {
+        return this -> ler_identificador(inicio);
+    }
+
 
     return std::unexpected(
         ErroLexico::caracter_invalido(caracter, inicio));
