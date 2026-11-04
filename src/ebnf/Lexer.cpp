@@ -129,7 +129,7 @@ Lexer::ler_identificador(common::Posicao inicio)
             identificador,
             [](unsigned char c)
             {
-                return std::islower(c) != 0;
+                return std::islower(static_cast<unsigned char>(c)) != 0;
             });
 
         if (contem_minuscula)
