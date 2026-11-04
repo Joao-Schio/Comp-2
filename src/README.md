@@ -76,6 +76,37 @@ A implementação original contém partes ainda não concluídas; portanto, **o 
 
 Pretendemos usar CMake, avisos rigorosos de compilação, testes automatizados e sanitizers quando disponíveis. Ao mesmo tempo, evitaremos dependências externas e generalizações prematuras: este é um gerador de parsers, não um framework de compiladores.
 
+
+## Guia de leitura para correção e revisão
+
+Esta implementação **não é uma tradução linha a linha do esqueleto em C**. Para avaliá-la, considere primeiro o contrato do trabalho (entrada EBNF, diagnósticos, validações, saída ANSI C e testes) e depois localize a responsabilidade equivalente no novo desenho. A ausência de uma função ou estrutura com o mesmo nome do código original não implica ausência de funcionalidade.
+
+### O que significa escrever C++23 de maneira inspirada em Rust?
+
+A expressão *Rust-ic* descreve uma preferência de projeto, **não uma alegação de que C++ oferece as garantias do borrow checker de Rust**. Queremos tornar explícitos ownership, falhas e estados válidos, usando recursos idiomáticos de C++23:
+
+- **Erros como valores:** `std::expected<T, ErroLexico>` representa uma operação que pode produzir um valor ou falhar. `std::unexpected` transporta o erro; `std::expected<void, E>` representa sucesso sem valor, como `Result<(), E>` em Rust. `std::optional<T>` é reservado a ausências normais, não a falhas que exigem diagnóstico. Exceções não são o mecanismo previsto para erros esperados da gramática.
+- **Ownership e movimentação:** objetos como `Scanner` possuem seus dados; `std::string` mantém lexemas e literais com gerenciamento automático. `std::move` explicita a transferência de um valor quando não precisamos mais da origem, sem prometer que toda movimentação elimina alocações. Evitamos `new`/`delete` manuais e cópias desnecessárias, sem proibir cópias úteis.
+- **Tipos que expressem alternativas:** `TokenType` é um `std::variant` de tipos específicos (`Terminal`, `NaoTerminal`, `Literal`, `ExpressaoRegular`, `Simbolo`, `PalavraReservada`, `Eof`). Isso evita hierarquias polimórficas e campos cuja validade dependa de flags externas.
+- **Evitar comportamento indefinido (UB):** o código deve verificar limites e EOF antes de consumir caracteres, manter invariantes de posição, evitar referências ou `std::string_view` pendentes e converter `char` para `unsigned char` ao chamar funções de classificação de `<cctype>`. C++ não torna esses cuidados automáticos: testes, revisão e sanitizers continuam necessários.
+- **Interfaces pequenas e explícitas:** `[[nodiscard]]` sinaliza resultados que não devem ser ignorados; funções auxiliares devem ter responsabilidades delimitadas. `noexcept` só deve ser usado quando a operação realmente não pode lançar exceções (por exemplo, funções que não alocam).
+
+### Como ler o lexer em desenvolvimento
+
+Em `ebnf/Lexer.hpp` e `ebnf/Lexer.cpp`, `Scanner` administra a fonte, o cursor e as posições. `Lexer` converte essa sequência em `Token` ou `ErroLexico`. A localização do token registra o início e o fim da leitura.
+
+A leitura de literais ilustra a decomposição pretendida: `casa()` confere o delimitador sem consumir; `ler_literal()` coordena a operação; `ler_conteudo_literal()` percorre o conteúdo; `ler_escape()` interpreta escapes. Essa separação busca legibilidade e facilita testes e diagnósticos.
+
+**Importante:** esses exemplos descrevem a arquitetura e o código em evolução, não afirmam que todos os caminhos do lexer, o parser, as análises ou a geração já estejam concluídos. A implementação deve ser julgada também pelo comportamento observável e pelos testes, não apenas pelas intenções aqui documentadas.
+
+### Critérios práticos para quem avaliar
+
+1. Confira os requisitos do enunciado e os casos em `testes/`, sem presumir equivalência nominal com `src-old/`.
+2. Distinga o executável **gerador em C++23** do **parser gerado em ANSI C**: são contratos de compilação diferentes.
+3. Verifique os caminhos de sucesso e erro, inclusive posições, EOF, literais malformados e referências inválidas.
+4. Considere ownership, validade de referências e ausência de UB; não confunda `std::move` com uma garantia de segurança de memória.
+5. Identifique funcionalidades ainda não implementadas como pendências reais, sem tomar este documento como evidência de que estejam prontas.
+
 ## Estratégia de desenvolvimento
 
 A implementação será incremental: primeiro a infraestrutura mínima e os tipos fundamentais; depois leitura da EBNF, representação da gramática, validações, conjuntos e LL(1); por fim, geração de código e integração completa com Micro C.
