@@ -2,6 +2,7 @@
 
 #include <cstdlib>
 #include <iostream>
+#include <string_view>
 #include <variant>
 
 namespace
@@ -103,14 +104,38 @@ bool testar_regex_vazia()
 }
 } // namespace
 
-int main()
+int main(int argc, char* argv[])
 {
-    const bool regex = testar_regex_escapada();
-    const bool literal = testar_literal();
-    const bool comentario = testar_comentario_e_palavra_reservada();
-    const bool erro_regex = testar_regex_vazia();
+    if (argc != 2)
+    {
+        std::cerr << "Informe o teste a executar\n";
+        return EXIT_FAILURE;
+    }
 
-    return regex && literal && comentario && erro_regex
-        ? EXIT_SUCCESS
-        : EXIT_FAILURE;
+    const std::string_view teste{argv[1]};
+    bool passou = false;
+
+    if (teste == "regex_escapada")
+    {
+        passou = testar_regex_escapada();
+    }
+    else if (teste == "literal")
+    {
+        passou = testar_literal();
+    }
+    else if (teste == "comentario")
+    {
+        passou = testar_comentario_e_palavra_reservada();
+    }
+    else if (teste == "regex_vazia")
+    {
+        passou = testar_regex_vazia();
+    }
+    else
+    {
+        std::cerr << "Teste desconhecido: " << teste << '\n';
+        return EXIT_FAILURE;
+    }
+
+    return passou ? EXIT_SUCCESS : EXIT_FAILURE;
 }

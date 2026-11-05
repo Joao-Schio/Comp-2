@@ -41,3 +41,9 @@ Ferramenta:
     Trecho: CMakeLists.txt, tests/CMakeLists.txt, tests/LexerTests.cpp e USO_IA.md
     Finalidade: Reorganizar a configuracao CMake para compilar o nucleo em C++23 como uma biblioteca estatica compartilhada entre o executavel gerador e testes, integrar CTest sem bibliotecas externas e manter as flags de Debug/Release para GCC, Clang e MSVC. Incluir testes basicos do lexer, cobrindo regex com escape, literal, comentario, palavra reservada, posicao e erro de regex vazia.
     O que fiz: Configuracao CMake e testes iniciais gerados pela IA e propostos em pull request para revisao antes da integracao. O codigo de producao do lexer nao foi modificado. A execucao dos testes deve ser verificada no ambiente do projeto.
+
+Ferramenta:
+    ChatGPT (GPT-6)
+    Trecho: tests/CMakeLists.txt, tests/LexerTests.cpp e USO_IA.md
+    Finalidade: Fazer o CTest registrar e reportar separadamente os quatro cenarios de teste do lexer, mantendo um unico executavel de teste e sem adicionar dependencias externas.
+    O que fiz: A IA adaptou o main de LexerTests.cpp para aceitar o nome do caso por argumento e registrou as quatro invocacoes individuais no CMake. As alteracoes foram propostas em pull request para revisao; o codigo de producao nao foi modificado.
