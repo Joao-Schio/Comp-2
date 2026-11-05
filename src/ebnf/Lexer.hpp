@@ -89,6 +89,14 @@ struct ErroLexico
             .posicao = posicao
         };
     }
+    static ErroLexico regex_vazia(common::Posicao posicao)
+    {
+        return
+        {
+            .mensagem = "regex vazia",
+            .posicao = posicao
+        };
+    }
 };
 
 class Lexer

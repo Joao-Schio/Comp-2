@@ -325,15 +325,22 @@ Lexer::ler_regex(common::Posicao inicio)
         }
         if (caractere == '\\' && _scanner.peek(1) != '\0' && _scanner.peek(1) != '\n')
         {
-            _scanner.advance();
+            regex.push_back(_scanner.advance());
         }
         regex.push_back(_scanner.advance());
     }
     erro = this -> casa("/", inicio);
+    
+    if (regex.empty())
+    {
+        return std::unexpected(ErroLexico::regex_vazia(inicio));
+    }
+
     if (!erro.has_value())
     {
         return std::unexpected(std::move(erro.error()));
     }
+    
     return Token
     {
         .tipo = ExpressaoRegular
