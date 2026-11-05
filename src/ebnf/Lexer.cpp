@@ -307,6 +307,49 @@ Lexer::ler_literal(common::Posicao inicio)
 }
 
 std::expected<Token, ErroLexico>
+Lexer::ler_regex(common::Posicao inicio)
+{
+    auto erro = this -> casa("/", inicio);
+    if (!erro.has_value())
+    {
+        return std::unexpected(std::move(erro.error()));
+    }
+    _scanner.advance();
+    std::string regex{};
+    while(!_scanner.eof() && _scanner.peek() != '/')
+    {
+        auto caractere = _scanner.peek();
+        if (caractere == '\n' || caractere == '\0')
+        {
+            return std::unexpected(ErroLexico::regex_nao_terminada(inicio));
+        }
+        if (caractere == '\\' && _scanner.peek(1) != '\0' && _scanner.peek(1) != '\n')
+        {
+            _scanner.advance();
+        }
+        regex.push_back(_scanner.advance());
+    }
+    erro = this -> casa("/", inicio);
+    if (!erro.has_value())
+    {
+        return std::unexpected(std::move(erro.error()));
+    }
+    return Token
+    {
+        .tipo = ExpressaoRegular
+        {
+            .padrao = std::move(regex)
+        },
+        .localizacao =
+        {
+            ._inicio = inicio,
+            ._fim = _scanner.posicao()
+        }
+    };
+}
+
+
+std::expected<Token, ErroLexico>
 Lexer::get_prox_token()
 {
     if (auto erro = this -> pular_ignoraveis())

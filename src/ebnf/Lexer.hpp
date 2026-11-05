@@ -81,6 +81,14 @@ struct ErroLexico
             .posicao = posicao
         };
     }
+    static ErroLexico regex_nao_terminada(common::Posicao posicao)
+    {
+        return
+        {
+            .mensagem = "regex nao terminada",
+            .posicao = posicao
+        };
+    }
 };
 
 class Lexer
