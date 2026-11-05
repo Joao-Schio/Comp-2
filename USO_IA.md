@@ -35,3 +35,9 @@ Ferramenta:
     Trecho: src/README.md e USO_IA.md
     Finalidade: Revisar e ampliar a documentação da nova implementação em C++23 para facilitar a leitura e a correção do trabalho pelo professor ou por ferramentas de IA. Explicar a inspiração em Rust (erros como valores com std::expected, ownership, std::move, std::variant e prevenção de comportamento indefinido), a separação entre gerador C++23 e parser ANSI C e os critérios para avaliar a reescrita sem exigir correspondência direta com o esqueleto em C.
     O que fiz: Texto de documentação redigido pela IA e proposto em pull request para revisão. Nenhuma alteração no código-fonte ou no comportamento do programa.
+
+Ferramenta:
+    ChatGPT (GPT-6)
+    Trecho: CMakeLists.txt, tests/CMakeLists.txt, tests/LexerTests.cpp e USO_IA.md
+    Finalidade: Reorganizar a configuracao CMake para compilar o nucleo em C++23 como uma biblioteca estatica compartilhada entre o executavel gerador e testes, integrar CTest sem bibliotecas externas e manter as flags de Debug/Release para GCC, Clang e MSVC. Incluir testes basicos do lexer, cobrindo regex com escape, literal, comentario, palavra reservada, posicao e erro de regex vazia.
+    O que fiz: Configuracao CMake e testes iniciais gerados pela IA e propostos em pull request para revisao antes da integracao. O codigo de producao do lexer nao foi modificado. A execucao dos testes deve ser verificada no ambiente do projeto.
