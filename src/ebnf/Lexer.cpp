@@ -383,11 +383,20 @@ Lexer::get_prox_token()
         return std::move(*simbolo);
     }
 
-    if (std::isalpha(caracter) || caracter == '_')
+    else if (std::isalpha(caracter) || caracter == '_')
     {
         return this -> ler_identificador(inicio);
     }
 
+    else if (caracter == '\'' || caracter == '\"')
+    {
+        return this -> ler_literal(inicio);
+    }
+
+    else if (caracter == '/')
+    {
+        return this -> ler_regex(inicio);
+    }
 
     return std::unexpected(
         ErroLexico::caracter_invalido(caracter, inicio));
