@@ -329,18 +329,19 @@ Lexer::ler_regex(common::Posicao inicio)
         }
         regex.push_back(_scanner.advance());
     }
-    erro = this -> casa("/", inicio);
     
     if (regex.empty())
     {
         return std::unexpected(ErroLexico::regex_vazia(inicio));
     }
-
+    
+    erro = this -> casa("/", inicio);
     if (!erro.has_value())
     {
         return std::unexpected(std::move(erro.error()));
     }
-    
+    _scanner.advance();
+
     return Token
     {
         .tipo = ExpressaoRegular
