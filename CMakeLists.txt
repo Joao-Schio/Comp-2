@@ -3,53 +3,56 @@ cmake_minimum_required(VERSION 3.25)
 project(Comp2 LANGUAGES CXX)
 
 # Em geradores de configuracao unica (Ninja, Unix Makefiles), Debug e o padrao.
-# Visual Studio e outros geradores multi-config escolhem a configuracao no build.
+# Geradores multi-config escolhem a configuracao no momento do build.
 if(NOT CMAKE_CONFIGURATION_TYPES AND NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE Debug CACHE STRING "Configuracao da compilacao" FORCE)
 endif()
 
-add_executable(gerador
-    src/main.cpp
+# Aplica as mesmas regras de compilacao ao gerador, a biblioteca e aos testes.
+function(configurar_alvo_cpp23 alvo)
+    set_target_properties(${alvo} PROPERTIES
+        CXX_STANDARD 23
+        CXX_STANDARD_REQUIRED YES
+        CXX_EXTENSIONS NO
+    )
+
+    if(MSVC)
+        target_compile_options(${alvo} PRIVATE
+            "$<$<CONFIG:Debug>:/W4>"
+            "$<$<CONFIG:Debug>:/WX>"
+            "$<$<CONFIG:Debug>:/permissive->"
+            "$<$<CONFIG:Release>:/O2>"
+        )
+    else()
+        target_compile_options(${alvo} PRIVATE
+            "$<$<CONFIG:Debug>:-Wall>"
+            "$<$<CONFIG:Debug>:-Wextra>"
+            "$<$<CONFIG:Debug>:-Werror>"
+            "$<$<CONFIG:Debug>:-pedantic>"
+            "$<$<CONFIG:Release>:-O2>"
+        )
+    endif()
+endfunction()
+
+# Nucleo compartilhado entre o executavel e os testes; adicionar futuros .cpp
+# do parser e das analises aqui, sem incluir main.cpp na biblioteca.
+add_library(compiladores_core STATIC
     src/ebnf/Lexer.cpp
 )
+configurar_alvo_cpp23(compiladores_core)
 
-# Conforme os modulos forem implementados, adicionar novos .cpp
-# explicitamente na lista de fontes acima.
-set_target_properties(gerador PROPERTIES
-    CXX_STANDARD 23
-    CXX_STANDARD_REQUIRED YES
-    CXX_EXTENSIONS NO
-)
-
-# Os includes atuais usam tanto "src/ebnf/..." quanto "common/...".
-# Mantemos ambos os caminhos ate padronizar os includes no codigo-fonte.
-target_include_directories(gerador PRIVATE
+# Os includes existentes usam "src/ebnf/..." e "common/...".
+# PUBLIC propaga os caminhos para os executaveis que ligam a biblioteca.
+target_include_directories(compiladores_core PUBLIC
     "${CMAKE_CURRENT_SOURCE_DIR}"
     "${CMAKE_CURRENT_SOURCE_DIR}/src"
 )
 
-# GCC/Clang usam flags no estilo Unix; MSVC (e clang-cl) usa /W4 e /WX.
-# As flags sao especificas por configuracao, inclusive em geradores multi-config.
-if(MSVC)
-    target_compile_options(gerador PRIVATE
-        "$<$<CONFIG:Debug>:/W4>"
-        "$<$<CONFIG:Debug>:/WX>"
-        "$<$<CONFIG:Debug>:/permissive->"
-        "$<$<CONFIG:Release>:/O2>"
-    )
-else()
-    target_compile_options(gerador PRIVATE
-        "$<$<CONFIG:Debug>:-Wall>"
-        "$<$<CONFIG:Debug>:-Wextra>"
-        "$<$<CONFIG:Debug>:-Werror>"
-        "$<$<CONFIG:Debug>:-pedantic>"
-        "$<$<CONFIG:Release>:-O2>"
-    )
-endif()
+add_executable(gerador src/main.cpp)
+configurar_alvo_cpp23(gerador)
+target_link_libraries(gerador PRIVATE compiladores_core)
 
-# Prepara o projeto para testes com CTest sem tentar executar os testes
-# originais do gerador enquanto a reimplementacao nao estiver funcional.
 include(CTest)
-if(BUILD_TESTING AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/tests/CMakeLists.txt")
+if(BUILD_TESTING)
     add_subdirectory(tests)
 endif()
