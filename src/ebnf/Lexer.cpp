@@ -384,7 +384,7 @@ Lexer::get_prox_token()
         return std::move(*simbolo);
     }
 
-    else if (std::isalpha(caracter) || caracter == '_')
+    else if (std::isalpha(static_cast<unsigned char>(caracter)) || caracter == '_')
     {
         return this -> ler_identificador(inicio);
     }
