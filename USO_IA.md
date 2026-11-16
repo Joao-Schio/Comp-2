@@ -82,3 +82,9 @@ Ferramenta:
     Trecho: src/ebnf/Formatacao.hpp, src/ebnf/Formatacao.cpp, src/codegen/LeitorTokens.hpp, src/codegen/Gerador.cpp, src/main.cpp, tests/ e microc/INTEGRACAO.md
     Finalidade: Implementar a opcao --debug segundo o esqueleto C e tornar a leitura --tokens compativel tanto com o formato numerico do TP2 quanto com os nomes impressos pelo scanner do TP1, incluindo validacao de entradas malformadas, ordenacao compativel de diagnosticos/FIRST/FOLLOW e testes comparados aos arquivos de referencia do professor.
     O que fiz: Implementacao, testes e documentacao produzidos pelo ChatGPT para revisao e aplicacao pelo aluno, sem commit ou pull request no repositorio remoto.
+
+Ferramenta:
+    ChatGPT (GPT-6)
+    Trecho: README.md, README.OLD.MD e USO_IA.md
+    Finalidade: Substituir o README principal desatualizado por uma documentação fiel à implementação atual em C++23, aos comandos CMake Debug/Release, à geração ANSI C89, ao scanner Micro C, ao submódulo TP1 e aos testes automatizados; preservar integralmente o README anterior em README.OLD.MD.
+    O que fiz: Copiei sem nenhuma alteração o README.md anterior para README.OLD.MD, redigi integralmente o novo README.md e acrescentei este registro de uso de IA. As alterações são exclusivamente documentais e foram propostas em pull request para revisão pelo aluno.
