@@ -2,12 +2,12 @@
 
 #include <cstdlib>
 #include <fstream>
-#include <iostream>
 #include <iterator>
 #include <string>
 #include <string_view>
 #include <utility>
 #include <print>
+#include <cstdio>
 
 int main(int argc, char* argv[])
 {
@@ -29,7 +29,7 @@ int main(int argc, char* argv[])
                       std::istreambuf_iterator<char>{}};
     if (arquivo.bad())
     {
-        std::println(stderr,"Falha ao ler: {}", argv[2]);
+        std::println(stderr, "Falha ao ler: {}", argv[2]);
         return EXIT_FAILURE;
     }
 
@@ -48,7 +48,7 @@ int main(int argc, char* argv[])
     }
     std::println(
         "EBNF analisada: {} tokens, {} skips, {} regras", 
-        gramatica ->tokens.size(), 
+        gramatica -> tokens.size(), 
         gramatica -> skips.size(), 
         gramatica -> regras.size()
     );
