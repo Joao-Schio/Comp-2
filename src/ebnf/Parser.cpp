@@ -406,4 +406,4 @@ std::expected<Gramatica, ErroSintatico> analisar_ebnf(std::string fonte)
 {
     return Parser{Lexer{Scanner{std::move(fonte)}}}.analisar();
 }
-} // namespace compiladores::ebnf
+}

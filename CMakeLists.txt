@@ -38,6 +38,8 @@ endfunction()
 add_library(compiladores_core STATIC
     src/ebnf/Lexer.cpp
     src/ebnf/Parser.cpp
+    src/analysis/Analise.cpp
+    src/analysis/LL1.cpp
 )
 configurar_alvo_cpp23(compiladores_core)
 
