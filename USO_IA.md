@@ -1,5 +1,10 @@
 ## USO_IA.md
 
+**Autoria deste registro:** o conteúdo textual deste `USO_IA.md` é redigido e organizado pelo ChatGPT (GPT-6), por solicitação do aluno, que define os objetivos, revisa as propostas e decide sobre a incorporação das mudanças. A atribuição da redação deste documento à IA não implica atribuir à IA todo o código ou todas as decisões do projeto.
+
+**Autoria dos testes em `tests/`:** todos os arquivos atualmente presentes nesse diretório — `CMakeLists.txt`, `LexerTests.cpp`, `ParserTests.cpp`, `AnaliseTests.cpp`, `LL1Tests.cpp` e `README.md` — foram produzidos pelo ChatGPT (GPT-6) a pedido do aluno. Isso não inclui os materiais de referência em `testes/`.
+
+
 Registre aqui cada uso relevante de ferramentas de IA generativa, como no TP1. Se nenhuma foi usada, deixe apenas a frase:
 
 Nenhuma ferramenta de IA foi utilizada no desenvolvimento deste trabalho.
@@ -47,3 +52,9 @@ Ferramenta:
     Trecho: tests/CMakeLists.txt, tests/LexerTests.cpp e USO_IA.md
     Finalidade: Fazer o CTest registrar e reportar separadamente os quatro cenarios de teste do lexer, mantendo um unico executavel de teste e sem adicionar dependencias externas.
     O que fiz: A IA adaptou o main de LexerTests.cpp para aceitar o nome do caso por argumento e registrou as quatro invocacoes individuais no CMake. As alteracoes foram propostas em pull request para revisao; o codigo de producao nao foi modificado.
+
+Ferramenta:
+    ChatGPT (GPT-6)
+    Trecho: tests/README.md e USO_IA.md
+    Finalidade: Documentar os testes C++23 integrados ao CTest, explicar como executá-los, distinguir tests/ dos testes de referência em testes/ e declarar explicitamente a autoria integral da documentação e dos testes produzidos pela IA.
+    O que fiz: Redigi integralmente tests/README.md, acrescentei as declarações de autoria a USO_IA.md e preservei os registros históricos existentes. Alterações de documentação propostas em pull request para revisão do aluno; não alterei os testes nem o código de produção.
