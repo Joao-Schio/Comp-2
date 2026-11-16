@@ -101,3 +101,37 @@ file(WRITE "${OUTPUT}/vazia.ebnf" "RULES inicio = ;\n")
 executar_e_compilar("${OUTPUT}/vazia.ebnf" vazia)
 file(WRITE "${OUTPUT}/vazia.txt" "")
 verificar_programa(vazia "${OUTPUT}/vazia.txt" "entrada aceita\nstatus 0\n")
+
+# O --tokens tambem aceita tipos por nome e sem as virgulas do formato antigo.
+file(WRITE "${OUTPUT}/tokens-nomes.txt"
+    "Token: tipo = T_LIT_2 lexema = 'if' linha = 1\n"
+    "Token: tipo = ID lexema = 'alpha' linha = 1\n"
+    "Token: tipo = T_LIT_3 lexema = '-' linha = 1\n"
+    "Token: tipo = T_N_ID lexema = 'beta' linha = 1\n")
+execute_process(COMMAND "${OUTPUT}/literals.bin" --tokens "${OUTPUT}/tokens-nomes.txt"
+                RESULT_VARIABLE codigo OUTPUT_VARIABLE stdout ERROR_VARIABLE stderr)
+if(NOT codigo STREQUAL "0" OR NOT stdout STREQUAL "entrada aceita\n")
+    message(FATAL_ERROR "Tokens com nomes nao aceitos: ${stdout}${stderr}")
+endif()
+
+foreach(nome unknown bad_line)
+    if(nome STREQUAL "unknown")
+        file(WRITE "${OUTPUT}/tokens-${nome}.txt"
+            "Token: tipo = T_NAO_EXISTE lexema = 'x' linha = 1\n")
+    else()
+        file(WRITE "${OUTPUT}/tokens-${nome}.txt"
+            "Token: tipo = 1, lexema = 'x', linha = nao_numero\n")
+    endif()
+    execute_process(COMMAND "${OUTPUT}/literals.bin" --tokens "${OUTPUT}/tokens-${nome}.txt"
+                    RESULT_VARIABLE codigo OUTPUT_VARIABLE stdout ERROR_VARIABLE stderr)
+    if(NOT codigo STREQUAL "1" OR NOT stderr MATCHES "arquivo de tokens: formato invalido")
+        message(FATAL_ERROR "Arquivo malformado ${nome} deveria falhar: ${stdout}${stderr}")
+    endif()
+endforeach()
+
+# --debug e uma opcao do gerador; nao precisa de -o.
+execute_process(COMMAND "${GERADOR}" "${ROOT}/tests/fixtures/nullable.ebnf" --debug
+                RESULT_VARIABLE codigo OUTPUT_VARIABLE stdout ERROR_VARIABLE stderr)
+if(NOT codigo STREQUAL "0" OR NOT stdout STREQUAL "inicio = [ 'a' ] | 'b' ;\n")
+    message(FATAL_ERROR "--debug nao imprimiu a AST como o esperado: ${stdout}${stderr}")
+endif()

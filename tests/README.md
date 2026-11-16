@@ -2,7 +2,7 @@
 
 Este diretório contém os testes da **nova implementação do gerador**, escritos em C++23 e registrados no CTest. A finalidade é verificar cada etapa isoladamente, com falhas reproduzíveis e sem bibliotecas externas de teste.
 
-> **Autoria e uso de IA:** o conteúdo dos arquivos deste diretório (`CMakeLists.txt`, `LexerTests.cpp`, `ParserTests.cpp`, `AnaliseTests.cpp`, `LL1Tests.cpp`, `RegexTests.cpp`, `GeneratedEndToEnd.cmake`, `MicroCIntegration.cmake`, os arquivos em `fixtures/` e este `README.md`) foi produzido pelo ChatGPT (GPT-6) a pedido do aluno, que revisa e decide sobre a integração das alterações. Consulte [`USO_IA.md`](../USO_IA.md) para o histórico. Esta declaração **não** se estende ao diretório `testes/`, que contém os casos e resultados de referência do trabalho.
+> **Autoria e uso de IA:** o conteúdo dos arquivos deste diretório (`CMakeLists.txt`, `LexerTests.cpp`, `ParserTests.cpp`, `AnaliseTests.cpp`, `LL1Tests.cpp`, `RegexTests.cpp`, `GeneratedEndToEnd.cmake`, `MicroCIntegration.cmake`, `MicroCTokens.cmake`, `ReferenceOutputs.cmake`, `FormatacaoTests.cpp`, os arquivos em `fixtures/` e este `README.md`) foi produzido pelo ChatGPT (GPT-6) a pedido do aluno, que revisa e decide sobre a integração das alterações. Consulte [`USO_IA.md`](../USO_IA.md) para o histórico. Esta declaração **não** se estende ao diretório `testes/`, que contém os casos e resultados de referência do trabalho.
 
 ## Compilar e executar
 
@@ -29,6 +29,8 @@ ctest --test-dir build -R '^Analise\.' --output-on-failure
 ctest --test-dir build -R '^LL1\.' --output-on-failure
 ctest --test-dir build -R '^Regex\.' --output-on-failure
 ctest --test-dir build -R '^Gerador\.' --output-on-failure
+ctest --test-dir build -R '^Formatacao\.' --output-on-failure
+ctest --test-dir build -R '^MicroC\.' --output-on-failure
 ```
 
 Os testes são compilados com as opções de C++23 do projeto e, na configuração Debug para GCC/Clang, com `-Wall -Wextra -Werror -pedantic`. O compilador e a biblioteca padrão precisam suportar os recursos de C++23 utilizados pelo código.
@@ -44,7 +46,10 @@ Os testes são compilados com as opções de C++23 do projeto e, na configuraç�
 | `RegexTests.cpp` | `teste_regex` | 12 | Regex compilada como automato deterministico, escapes, classes e entradas invalidas |
 | `GeneratedEndToEnd.cmake` e `fixtures/` | `gerador` e compilador ANSI C | 1 | Gera e compila parsers; compara sete programas de expressao com os resultados de referencia, e valida outras construcoes |
 | `MicroCIntegration.cmake` | `parser_microc` | 1 | Compila o parser Micro C com o scanner do TP1 e compara os seis programas com os resultados de referencia |
-| `CMakeLists.txt` | — | **50 no total** | Registra todos os casos separadamente no CTest |
+| `FormatacaoTests.cpp` | `teste_formatacao` | 3 | Impressao da AST usada pela opcao `--debug` |
+| `MicroCTokens.cmake` | `lexer_comp1_referencia` e `parser_microc` | 1 | O proprio TP1 emite tokens por nome e o parser gerado os le via `--tokens` |
+| `ReferenceOutputs.cmake` | `gerador` | 1 | Compara integralmente as quatro saidas `testes/esperado/*.gerador` (texto, posicoes e status) |
+| `CMakeLists.txt` | — | **55 no total** | Registra todos os casos separadamente no CTest |
 
 Cada executável recebe **um identificador de caso** como argumento. Por exemplo, depois da compilação:
 
@@ -72,3 +77,18 @@ Os testes deste diretório cobrem também a construção de autômatos de expres
 Prefira casos pequenos que isolem uma propriedade e incluam entradas inválidas além das válidas. Para diagnósticos relevantes, confira também posição, gravidade e mensagem. Para tabelas de FIRST/FOLLOW, compare a formatação quando ela faz parte do contrato do trabalho.
 
 A documentação deste diretório deve ser atualizada quando novos módulos e casos forem adicionados.
+
+## `--debug` e `--tokens`
+
+O gerador agora aceita `--debug` para imprimir as regras EBNF normalizadas apos a leitura; isso e testado nos casos `Formatacao.*` e `Gerador.EndToEnd`.
+
+O analisador produzido aceita `--tokens arquivo` com duas representacoes de cada linha:
+
+```text
+Token: tipo = 3, lexema = '10', linha = 2
+Token: tipo = INTEGERCONST lexema = '10' linha = 2
+```
+
+A primeira forma segue o modelo numerico do esqueleto do TP2. A segunda corresponde ao texto produzido pelo executavel de teste do TP1. O formato dos nomes depende dos terminais conhecidos pela gramatica gerada; em Micro C, segue o enum `TokenType` de `microc/tokens.h`. O leitor reporta a linha do arquivo de tokens em caso de formato invalido. Ele e orientado a linhas: valores literais que incluam quebras de linha reais nao podem ser representados por esse formato sem uma convencao de escape adicional.
+
+As saidas `testes/esperado/*.gerador` sao verificadas pelo caso `Gerador.Referencias`. A ordem da tabela FIRST/FOLLOW e das mensagens de recursao a esquerda respeita a primeira aparicao dos nao terminais na EBNF, como na implementacao C do professor.

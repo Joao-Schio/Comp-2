@@ -1,5 +1,6 @@
 #include "src/analysis/Analise.hpp"
 #include "src/codegen/Gerador.hpp"
+#include "src/ebnf/Formatacao.hpp"
 #include "src/ebnf/Parser.hpp"
 
 #include <cstdio>
@@ -22,13 +23,14 @@ struct Opcoes
     bool check{};
     bool parse_only{};
     bool tree{};
+    bool debug{};
     bool scanner_microc{};
 };
 
 void uso()
 {
     std::println(stderr,
-        "uso: gerador gramatica.ebnf -o prefixo [--sets] [--tree] [--scanner microc]\n"
+        "uso: gerador gramatica.ebnf -o prefixo [--sets] [--tree] [--debug] [--scanner microc]\n"
         "     gerador --check|--sets|--parse-only gramatica.ebnf");
 }
 
@@ -43,6 +45,7 @@ void uso()
         else if (argumento == "--check") opcoes.check = true;
         else if (argumento == "--parse-only") opcoes.parse_only = true;
         else if (argumento == "--tree") opcoes.tree = true;
+        else if (argumento == "--debug") opcoes.debug = true;
         else if (argumento == "--scanner" && i + 1 < argc)
         {
             if (std::string_view{argv[++i]} != "microc") return false;
@@ -53,7 +56,7 @@ void uso()
         else return false;
     }
     return !opcoes.arquivo.empty() &&
-        (opcoes.parse_only || opcoes.check || opcoes.sets || !opcoes.prefixo.empty()) &&
+        (opcoes.parse_only || opcoes.check || opcoes.sets || opcoes.debug || !opcoes.prefixo.empty()) &&
         (!opcoes.tree || !opcoes.prefixo.empty());
 }
 
@@ -111,6 +114,11 @@ int main(int argc, char* argv[])
         std::println(stderr, "{}:{}:{}: erro: {}", opcoes.arquivo,
                      erro.posicao.linha, erro.posicao.coluna, erro.mensagem);
         return EXIT_FAILURE;
+    }
+    if (opcoes.debug)
+    {
+        std::print("{}", compiladores::ebnf::formatar_gramatica(*gramatica));
+        (void)std::fflush(stdout);
     }
     if (opcoes.parse_only)
     {

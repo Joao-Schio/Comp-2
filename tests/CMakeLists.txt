@@ -88,3 +88,33 @@ if(TARGET parser_microc)
             "-DROOT=${CMAKE_SOURCE_DIR}"
             -P "${CMAKE_CURRENT_SOURCE_DIR}/MicroCIntegration.cmake")
 endif()
+
+# Reformatacao da AST usada por --debug (uma verificacao por caso).
+add_executable(teste_formatacao FormatacaoTests.cpp)
+configurar_alvo_cpp23(teste_formatacao)
+target_link_libraries(teste_formatacao PRIVATE compiladores_core)
+foreach(caso sequencia precedencia vazio)
+    add_test(NAME Formatacao.${caso} COMMAND teste_formatacao ${caso})
+endforeach()
+
+# Testa o formato de saida real do scanner TP1 (nomes, sem virgulas).
+if(TARGET parser_microc)
+    add_executable(lexer_comp1_referencia "${CMAKE_SOURCE_DIR}/microc/lex.yy.c")
+    set_target_properties(lexer_comp1_referencia PROPERTIES
+        C_STANDARD 11 C_STANDARD_REQUIRED YES C_EXTENSIONS YES)
+    add_test(NAME MicroC.ArquivoTokens
+        COMMAND "${CMAKE_COMMAND}"
+            "-DPARSER=$<TARGET_FILE:parser_microc>"
+            "-DLEXER=$<TARGET_FILE:lexer_comp1_referencia>"
+            "-DROOT=${CMAKE_SOURCE_DIR}"
+            "-DOUTPUT=${CMAKE_CURRENT_BINARY_DIR}/tokens-microc"
+            -P "${CMAKE_CURRENT_SOURCE_DIR}/MicroCTokens.cmake")
+endif()
+
+# Compara mensagens, conjuntos, posicoes e codigos de saida com o TP2.
+add_test(NAME Gerador.Referencias
+    COMMAND "${CMAKE_COMMAND}"
+        "-DGERADOR=$<TARGET_FILE:gerador>"
+        "-DROOT=${CMAKE_SOURCE_DIR}"
+        "-DOUTPUT=${CMAKE_CURRENT_BINARY_DIR}/referencias"
+        -P "${CMAKE_CURRENT_SOURCE_DIR}/ReferenceOutputs.cmake")

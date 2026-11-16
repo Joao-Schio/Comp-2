@@ -1,5 +1,6 @@
 #include "src/codegen/Gerador.hpp"
 #include "src/codegen/Regex.hpp"
+#include "src/codegen/LeitorTokens.hpp"
 
 #include <algorithm>
 #include <cstddef>
@@ -347,8 +348,11 @@ private:
         gerar_procedimentos(corpo); // Antes do cabecalho para registrar os conjuntos.
         _fonte = "/* Analisador descendente recursivo gerado em ANSI C89. */\n"
             "#include <stdio.h>\n#include <stdlib.h>\n#include <string.h>\n"
+            "#include <ctype.h>\n#include <errno.h>\n#include <limits.h>\n"
             "#include " + string_c(_nome_cabecalho) + "\n\n";
-        _fonte += std::format("#define SUPORTE_ARVORE {}\n\n", _arvore ? 1 : 0);
+        _fonte += std::format("#define SUPORTE_ARVORE {}\n", _arvore ? 1 : 0);
+        _fonte += std::format("#define COMP2_TOKEN_POSSUI_COLUNA {}\n\n",
+            _gramatica.tokens_externos ? 0 : 1);
         for (std::size_t i = 0; i < _conjuntos.size(); ++i)
         {
             _fonte += std::format("static const int conj_{}[] = {{", i);
@@ -468,6 +472,43 @@ static void consumir_entrada(size_t tamanho)
 )C";
     }
 
+    void gerar_leitor_tokens()
+    {
+        _fonte += "static int tipo_token_por_nome(const char *nome)\n{\n";
+        if (_gramatica.tokens_externos)
+        {
+            // O fluxo de tokens original do TP1 imprime nomes do enum,
+            // inclusive alguns que podem nao aparecer na gramatica.
+            static constexpr std::string_view nomes[] = {
+                "UNDEF", "ID", "END_OF_FILE", "INTEGERCONST", "CHARCONST",
+                "STRINGCONST", "PLUS", "MINUS", "MUL", "DIV", "MOD",
+                "EQ", "NEQ", "LT", "GT", "LEQ", "GEQ", "AND", "OR", "NOT",
+                "ASSIGN", "SEMICOLON", "COMMA", "LPAREN", "RPAREN",
+                "LBRACE", "RBRACE", "LBRACKET", "RBRACKET",
+                "MAIN", "IF", "ELSE", "FOR", "RETURN", "INT", "CHAR", "PRINT"
+            };
+            for (const auto nome : nomes)
+                linha(_fonte, 1, std::format("if (strcmp(nome, {}) == 0) return {};",
+                    string_c(nome), nome));
+        }
+        else
+        {
+            for (std::size_t i = 0; i < _analise.terminais.size(); ++i)
+            {
+                const auto& terminal = _analise.terminais[i];
+                const auto nome = nome_tipo(i);
+                linha(_fonte, 1, std::format("if (strcmp(nome, {}) == 0) return {};",
+                    string_c(nome), nome));
+                if (terminal.tipo == analysis::TipoTerminal::Nomeado)
+                    linha(_fonte, 1, std::format("if (strcmp(nome, {}) == 0) return {};",
+                        string_c(terminal.nome), nome));
+            }
+        }
+        linha(_fonte, 1, "return -1;");
+        _fonte += "}\n\n";
+        _fonte += leitor_tokens_ansi_c;
+    }
+
     void gerar_primitivas()
     {
         _fonte += "const char *nome_token(int tipo)\n{\n    switch (tipo) {\n";
@@ -531,51 +572,30 @@ static void arvore_sai(void)
     --nivel_arvore;
 }
 
-static Token token_de_arquivo(void)
-{
-    Token t;
-    char buf[2048];
-    int numero, linha_token;
-    static int linha_arquivo = 0;
-    memset(&t, 0, sizeof t);
-    while (fgets(buf, sizeof buf, arquivo_tokens) != NULL) {
-        ++linha_arquivo;
-        if (strspn(buf, " \r\n\t") == strlen(buf)) continue;
-        if (sscanf(buf, "Token: tipo = %d, lexema = '%99[^']', linha = %d",
-                   &numero, t.lexema, &linha_token) != 3) {
-            fprintf(stderr, "linha %d do arquivo de tokens: formato invalido\n", linha_arquivo);
-            exit(EXIT_FAILURE);
-        }
-        t.tipo = numero;
-        t.linha = linha_token;
 )C";
-        if (!_gramatica.tokens_externos) _fonte += "        t.coluna = 1;\n";
-        _fonte += R"C(        return t;
-    }
-    t.tipo = TOKEN_FIM;
-    t.linha = linha_arquivo + 1;
-)C";
-        if (!_gramatica.tokens_externos) _fonte += "    t.coluna = 1;\n";
-        _fonte += R"C(    return t;
-}
-
-static void avancar(void)
+        gerar_leitor_tokens();
+        _fonte += R"C(static void avancar(void)
 {
     if (arquivo_tokens != NULL) tok = token_de_arquivo();
     else {
 )C";
         if (_gramatica.tokens_externos)
         {
-            _fonte += R"C(        tok = proximo_token();
-        if (tok.tipo == UNDEF) {
-            fprintf(stderr, "linha %d: erro lexico: %s\n", tok.linha, tok.lexema);
-            exit(EXIT_FAILURE);
-        }
-)C";
+            _fonte += "        tok = proximo_token();\n";
         }
         else _fonte += "        tok = proximo_token_gerado();\n";
         _fonte += R"C(    }
-}
+)C";
+        if (_gramatica.tokens_externos)
+        {
+            // O UNDEF deve ser tratado inclusive quando vem de --tokens.
+            _fonte += R"C(    if (tok.tipo == UNDEF) {
+        fprintf(stderr, "linha %d: erro lexico: %s\n", tok.linha, tok.lexema);
+        exit(EXIT_FAILURE);
+    }
+)C";
+        }
+        _fonte += R"C(}
 
 void match(int esperado)
 {

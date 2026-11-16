@@ -2,7 +2,7 @@
 
 **Autoria deste registro:** o conteúdo textual deste `USO_IA.md` é redigido e organizado pelo ChatGPT (GPT-6), por solicitação do aluno, que define os objetivos, revisa as propostas e decide sobre a incorporação das mudanças. A atribuição da redação deste documento à IA não implica atribuir à IA todo o código ou todas as decisões do projeto.
 
-**Autoria dos testes em `tests/`:** todos os arquivos atualmente presentes nesse diretório — `CMakeLists.txt`, `LexerTests.cpp`, `ParserTests.cpp`, `AnaliseTests.cpp`, `LL1Tests.cpp` e `README.md` — foram produzidos pelo ChatGPT (GPT-6) a pedido do aluno. Isso não inclui os materiais de referência em `testes/`.
+**Autoria dos testes em `tests/`:** os arquivos de testes e a infraestrutura CTest desse diretório, incluindo os testes de lexer, parser, análise, LL(1), regex, geração de ANSI C, Micro C e formatação, foram produzidos pelo ChatGPT (GPT-6) a pedido do aluno. Isso não inclui os materiais de referência fornecidos no diretório `testes/`.
 
 
 Registre aqui cada uso relevante de ferramentas de IA generativa, como no TP1. Se nenhuma foi usada, deixe apenas a frase:
@@ -58,3 +58,27 @@ Ferramenta:
     Trecho: tests/README.md e USO_IA.md
     Finalidade: Documentar os testes C++23 integrados ao CTest, explicar como executá-los, distinguir tests/ dos testes de referência em testes/ e declarar explicitamente a autoria integral da documentação e dos testes produzidos pela IA.
     O que fiz: Redigi integralmente tests/README.md, acrescentei as declarações de autoria a USO_IA.md e preservei os registros históricos existentes. Alterações de documentação propostas em pull request para revisão do aluno; não alterei os testes nem o código de produção.
+
+Ferramenta:
+    ChatGPT (GPT-6)
+    Trecho: src/analysis/Analise.hpp, src/analysis/Analise.cpp, src/analysis/LL1.cpp e tests/AnaliseTests.cpp, tests/LL1Tests.cpp
+    Finalidade: Implementar validacao semantica, anulabilidade, FIRST/FOLLOW, recursao a esquerda e verificacao LL(1) com testes automatizados.
+    O que fiz: Gerou implementacao e testes em patch, revisados pelo aluno antes de integrar ao repositorio.
+
+Ferramenta:
+    ChatGPT (GPT-6)
+    Trecho: src/codegen/, src/main.cpp, tests/GeneratedEndToEnd.cmake e tests/RegexTests.cpp
+    Finalidade: Gerar parsers descendentes recursivos ANSI C89, compilar expressoes regulares em automatos, integrar a CLI e testar programas gerados.
+    O que fiz: Produziu codigo e testes para revisao local; o aluno decidiu sobre a integracao.
+
+Ferramenta:
+    ChatGPT (GPT-6)
+    Trecho: microc/scanner_comp1.c, microc/tokens.h, microc/INTEGRACAO.md, CMakeLists.txt e tests/MicroCIntegration.cmake
+    Finalidade: Integrar o scanner Flex do TP1 ao parser gerado, sem modificar o submodulo externo, e automatizar os testes de Micro C.
+    O que fiz: Criou o adaptador, configuracao de compilacao, documentacao e testes. O arquivo microc/lex.yy.c foi fornecido pelo aluno e nao foi redigido pela IA.
+
+Ferramenta:
+    ChatGPT (GPT-6)
+    Trecho: src/ebnf/Formatacao.hpp, src/ebnf/Formatacao.cpp, src/codegen/LeitorTokens.hpp, src/codegen/Gerador.cpp, src/main.cpp, tests/ e microc/INTEGRACAO.md
+    Finalidade: Implementar a opcao --debug segundo o esqueleto C e tornar a leitura --tokens compativel tanto com o formato numerico do TP2 quanto com os nomes impressos pelo scanner do TP1, incluindo validacao de entradas malformadas, ordenacao compativel de diagnosticos/FIRST/FOLLOW e testes comparados aos arquivos de referencia do professor.
+    O que fiz: Implementacao, testes e documentacao produzidos pelo ChatGPT para revisao e aplicacao pelo aluno, sem commit ou pull request no repositorio remoto.

@@ -505,6 +505,37 @@ void referencias_iniciais(const Expressao& expressao,
     }, expressao.no);
 }
 
+// Reproduz a ordem em que o parser C do professor registra os simbolos:
+// o primeiro uso de um nao terminal pode ocorrer antes de sua definicao.
+[[nodiscard]] std::vector<const ebnf::Regra*> ordenar_regras(const Gramatica& gramatica)
+{
+    std::vector<std::string> nomes;
+    std::unordered_set<std::string> conhecidos;
+    for (const auto& regra : gramatica.regras)
+    {
+        if (conhecidos.insert(regra.nome).second) nomes.push_back(regra.nome);
+        auto registrar = [&](const auto& referencia, common::Posicao)
+        {
+            using Tipo = std::decay_t<decltype(referencia)>;
+            if constexpr (std::is_same_v<Tipo, ebnf::ReferenciaNaoTerminal>)
+            {
+                if (conhecidos.insert(referencia.nome).second)
+                    nomes.push_back(referencia.nome);
+            }
+        };
+        visitar_referencias(*regra.expressao, registrar);
+    }
+
+    std::vector<const ebnf::Regra*> resultado;
+    for (const auto& nome : nomes)
+    {
+        const auto it = std::ranges::find_if(gramatica.regras,
+            [&](const ebnf::Regra& regra) { return regra.nome == nome; });
+        if (it != gramatica.regras.end()) resultado.push_back(&*it);
+    }
+    return resultado;
+}
+
 [[nodiscard]] std::vector<Diagnostico> detectar_recursao_esquerda(
     const Gramatica& gramatica, const Resultado& resultado)
 {
@@ -515,8 +546,9 @@ void referencias_iniciais(const Expressao& expressao,
     }
 
     std::vector<Diagnostico> erros;
-    for (const auto& regra : gramatica.regras)
+    for (const auto* regra_ptr : ordenar_regras(gramatica))
     {
+        const auto& regra = *regra_ptr;
         std::unordered_set<std::string> visitados;
         std::function<bool(const std::string&)> alcanca_origem =
             [&](const std::string& atual) -> bool
@@ -682,18 +714,19 @@ std::string formatar_tabela_conjuntos(
     const Gramatica& gramatica, const Resultado& analise)
 {
     std::size_t largura = std::string_view{"NAO TERMINAL"}.size();
-    for (const auto& regra : gramatica.regras)
+    const auto regras = ordenar_regras(gramatica);
+    for (const auto* regra : regras)
     {
-        largura = std::max(largura, regra.nome.size());
+        largura = std::max(largura, regra -> nome.size());
     }
 
     std::string saida = std::format("{:<{}}  ANULAVEL  FIRST / FOLLOW\n",
                                     "NAO TERMINAL", largura);
-    for (const auto& regra : gramatica.regras)
+    for (const auto* regra : regras)
     {
-        const auto& info = analise.nao_terminais.at(regra.nome);
+        const auto& info = analise.nao_terminais.at(regra -> nome);
         saida += std::format("{:<{}}  {:<8}  FIRST  = {}\n",
-            regra.nome, largura, info.anulavel ? "sim" : "nao",
+            regra -> nome, largura, info.anulavel ? "sim" : "nao",
             analise.formatar_conjunto(info.first));
         saida += std::format("{:<{}}            FOLLOW = {}\n",
             "", largura, analise.formatar_conjunto(info.follow));

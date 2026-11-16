@@ -67,17 +67,17 @@ bool executar(std::string_view nome)
         return verificar("RULES inicio = { } ;", "conteudo de repeticao e anulavel",
                         analysis::Gravidade::Erro, 1);
     if (nome == "opcional_guloso")
-        return verificar("RULES inicio = [ 'a' ] 'a' ;", "escolha gulosa",
+        return verificar("RULES inicio = [ 'a' ] 'a' ;", "resolvido de forma gulosa",
                         analysis::Gravidade::Aviso, 1);
     if (nome == "repeticao_gulosa")
-        return verificar("RULES inicio = { 'a' } 'a' ;", "escolha gulosa",
+        return verificar("RULES inicio = { 'a' } 'a' ;", "resolvido de forma gulosa",
                         analysis::Gravidade::Aviso, 1);
     if (nome == "repeticao_valida")
         return verificar("RULES inicio = { 'a' } 'b' ;", "",
                         analysis::Gravidade::Aviso, 0);
     if (nome == "else_pendente")
         return verificar("RULES inicio = 'if' inicio [ 'else' inicio ] | 'other' ;",
-                        "escolha gulosa", analysis::Gravidade::Aviso, 1);
+                        "resolvido de forma gulosa", analysis::Gravidade::Aviso, 1);
     return false;
 }
 }

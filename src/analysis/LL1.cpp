@@ -100,8 +100,10 @@ void verificar_expressao(const ebnf::Expressao& expressao,
             if (!comum.vazio())
             {
                 reportar(Gravidade::Aviso,
-                    std::format("{} tem escolha gulosa com {}",
-                                construcao, analise.formatar_conjunto(comum)));
+                    std::format("FIRST e FOLLOW de {} se intersectam "
+                                "(resolvido de forma gulosa) em {}",
+                                std::is_same_v<Tipo, ebnf::Opcional> ? "[ ]" : "{ }",
+                                analise.formatar_conjunto(comum)));
             }
             verificar_expressao(*no.conteudo, regra, analise, diagnosticos);
         }

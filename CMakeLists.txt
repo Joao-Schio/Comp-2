@@ -38,6 +38,7 @@ endfunction()
 add_library(compiladores_core STATIC
     src/ebnf/Lexer.cpp
     src/ebnf/Parser.cpp
+    src/ebnf/Formatacao.cpp
     src/analysis/Analise.cpp
     src/analysis/LL1.cpp
     src/codegen/Regex.cpp

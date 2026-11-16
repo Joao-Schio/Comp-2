@@ -50,3 +50,20 @@ gcc build/microc/manual.o build/microc/adapter.o build/microc/lex.o -o build/mic
 As definicoes `TOKENS EXTERN` e `--scanner microc` devem ser usadas juntas.
 O lexer permanece dependente dos tokens e das regras do TP1 original; a
 semantica desses tokens nao e alterada pelo gerador.
+
+## Fluxo de tokens do TP1
+
+Para conferir a leitura `--tokens` com a saida do lexer original, sem passar
+pelo adaptador, o target de testes compila tambem o executavel TP1 de
+referencia:
+
+```sh
+./build/tests/lexer_comp1_referencia testes/programas/microc/soma.mc > build/soma.tokens
+./build/microc/parser_microc --tokens build/soma.tokens
+```
+
+O arquivo do TP1 usa nomes de `TokenType` e separa os campos com espacos;
+o modo de compatibilidade tambem preserva a leitura de linhas com IDs
+numericos separados por virgulas, como no esqueleto do TP2.
+Esse formato textual nao representa sem ambiguidade lexemas contendo
+quebras de linha reais.
