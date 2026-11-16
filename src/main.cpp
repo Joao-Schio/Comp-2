@@ -37,8 +37,13 @@ int main(int argc, char* argv[])
     if (!gramatica)
     {
         const auto& erro = gramatica.error();
-        std::println(stderr,"{}:{}:{}: erro: {}", argv[2], erro.posicao.linha,':'
-                  , erro.posicao.coluna, erro.mensagem);
+        std::println(
+            stderr,
+            "{}:{}:{}: erro: {}",
+            argv[2],
+            erro.posicao.linha,
+            erro.posicao.coluna,
+            erro.mensagem);
         return EXIT_FAILURE;
     }
     std::println(
