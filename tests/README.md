@@ -23,10 +23,10 @@ ctest --test-dir build -N
 Para executar somente uma etapa, utilize o filtro `-R`:
 
 ```sh
-ctest --test-dir build -R '^Lexer\\.' --output-on-failure
-ctest --test-dir build -R '^Parser\\.' --output-on-failure
-ctest --test-dir build -R '^Analise\\.' --output-on-failure
-ctest --test-dir build -R '^LL1\\.' --output-on-failure
+ctest --test-dir build -R '^Lexer\.' --output-on-failure
+ctest --test-dir build -R '^Parser\.' --output-on-failure
+ctest --test-dir build -R '^Analise\.' --output-on-failure
+ctest --test-dir build -R '^LL1\.' --output-on-failure
 ```
 
 Os testes são compilados com as opções de C++23 do projeto e, na configuração Debug para GCC/Clang, com `-Wall -Wextra -Werror -pedantic`. O compilador e a biblioteca padrão precisam suportar os recursos de C++23 utilizados pelo código.
