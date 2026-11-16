@@ -1,0 +1,3 @@
+[submodule "external/comp1-2026"]
+	path = external/comp1-2026
+	url = https://github.com/Joao-Schio/comp1-2026.git
