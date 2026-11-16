@@ -1,0 +1,5 @@
+TOKENS
+  ID = /[a-z]+/ ;
+  SKIP = /[ \t\r\n]+/ ;
+RULES
+  inicio = "if" ID { "-" ID } ;

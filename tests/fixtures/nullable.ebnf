@@ -1,0 +1,4 @@
+TOKENS
+  SKIP = /[ \t\r\n]+/ ;
+RULES
+  inicio = [ "a" ] | "b" ;

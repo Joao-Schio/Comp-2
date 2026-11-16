@@ -1,8 +1,10 @@
 #include "src/analysis/Analise.hpp"
+#include "src/codegen/Gerador.hpp"
 #include "src/ebnf/Parser.hpp"
 
 #include <cstdio>
 #include <cstdlib>
+#include <filesystem>
 #include <fstream>
 #include <iterator>
 #include <print>
@@ -12,50 +14,88 @@
 
 namespace
 {
+struct Opcoes
+{
+    std::string arquivo;
+    std::string prefixo;
+    bool sets{};
+    bool check{};
+    bool parse_only{};
+    bool tree{};
+};
+
+void uso()
+{
+    std::println(stderr,
+        "uso: gerador gramatica.ebnf -o prefixo [--sets] [--tree]\n"
+        "     gerador --check|--sets|--parse-only gramatica.ebnf\n"
+        "     --scanner microc e --debug ainda nao estao disponiveis");
+}
+
+[[nodiscard]] bool ler_argumentos(int argc, char* argv[], Opcoes& opcoes)
+{
+    for (int i = 1; i < argc; ++i)
+    {
+        const std::string_view argumento{argv[i]};
+        if (argumento == "-o" && i + 1 < argc)
+            opcoes.prefixo = argv[++i];
+        else if (argumento == "--sets") opcoes.sets = true;
+        else if (argumento == "--check") opcoes.check = true;
+        else if (argumento == "--parse-only") opcoes.parse_only = true;
+        else if (argumento == "--tree") opcoes.tree = true;
+        else if (argumento.starts_with('-')) return false;
+        else if (opcoes.arquivo.empty()) opcoes.arquivo = argumento;
+        else return false;
+    }
+    return !opcoes.arquivo.empty() &&
+        (opcoes.parse_only || opcoes.check || opcoes.sets || !opcoes.prefixo.empty()) &&
+        (!opcoes.tree || !opcoes.prefixo.empty());
+}
+
 void imprimir_diagnostico(std::string_view arquivo, const compiladores::analysis::Diagnostico& d)
 {
     const auto gravidade = d.gravidade == compiladores::analysis::Gravidade::Erro
         ? "erro" : "aviso";
     if (d.posicao.linha == 0)
-    {
         std::println(stderr, "{}: {}: {}", arquivo, gravidade, d.mensagem);
-    }
     else if (!d.incluir_coluna || d.posicao.coluna == 0)
-    {
         std::println(stderr, "{}:{}: {}: {}", arquivo, d.posicao.linha,
                      gravidade, d.mensagem);
-    }
     else
-    {
         std::println(stderr, "{}:{}:{}: {}: {}", arquivo, d.posicao.linha,
                      d.posicao.coluna, gravidade, d.mensagem);
-    }
 }
-} // namespace
+
+[[nodiscard]] bool salvar(const std::filesystem::path& caminho, const std::string& conteudo)
+{
+    std::ofstream arquivo{caminho, std::ios::binary | std::ios::trunc};
+    if (!arquivo) return false;
+    arquivo.write(conteudo.data(), static_cast<std::streamsize>(conteudo.size()));
+    arquivo.close();
+    return arquivo.good();
+}
+}
 
 int main(int argc, char* argv[])
 {
-    // Modos temporarios enquanto a geracao de ANSI C esta em desenvolvimento.
-    if (argc != 3 || (std::string_view{argv[1]} != "--parse-only" &&
-                      std::string_view{argv[1]} != "--sets" &&
-                      std::string_view{argv[1]} != "--check"))
+    Opcoes opcoes;
+    if (!ler_argumentos(argc, argv, opcoes))
     {
-        std::println(stderr,
-            "Uso temporario: gerador [--parse-only|--check|--sets] gramatica.ebnf");
+        uso();
         return EXIT_FAILURE;
     }
 
-    std::ifstream arquivo{argv[2], std::ios::binary};
+    std::ifstream arquivo{opcoes.arquivo, std::ios::binary};
     if (!arquivo)
     {
-        std::println(stderr, "Nao foi possivel abrir: {}", argv[2]);
+        std::println(stderr, "gerador: nao foi possivel abrir {}", opcoes.arquivo);
         return EXIT_FAILURE;
     }
     std::string fonte{std::istreambuf_iterator<char>{arquivo},
                       std::istreambuf_iterator<char>{}};
     if (arquivo.bad())
     {
-        std::println(stderr, "Falha ao ler: {}", argv[2]);
+        std::println(stderr, "gerador: falha ao ler {}", opcoes.arquivo);
         return EXIT_FAILURE;
     }
 
@@ -63,12 +103,11 @@ int main(int argc, char* argv[])
     if (!gramatica)
     {
         const auto& erro = gramatica.error();
-        std::println(stderr, "{}:{}:{}: erro: {}", argv[2],
+        std::println(stderr, "{}:{}:{}: erro: {}", opcoes.arquivo,
                      erro.posicao.linha, erro.posicao.coluna, erro.mensagem);
         return EXIT_FAILURE;
     }
-    
-    if (std::string_view{argv[1]} == "--parse-only")
+    if (opcoes.parse_only)
     {
         std::println("EBNF analisada: {} tokens, {} skips, {} regras",
                      gramatica -> tokens.size(), gramatica -> skips.size(),
@@ -80,16 +119,12 @@ int main(int argc, char* argv[])
     if (!analise)
     {
         for (const auto& diagnostico : analise.error())
-        {
-            imprimir_diagnostico(argv[2], diagnostico);
-        }
+            imprimir_diagnostico(opcoes.arquivo, diagnostico);
         return EXIT_FAILURE;
     }
     for (const auto& aviso : analise -> avisos)
-    {
-        imprimir_diagnostico(argv[2], aviso);
-    }
-    if (std::string_view{argv[1]} == "--sets")
+        imprimir_diagnostico(opcoes.arquivo, aviso);
+    if (opcoes.sets)
     {
         std::print("{}", compiladores::analysis::formatar_tabela_conjuntos(
                             *gramatica, *analise));
@@ -100,13 +135,42 @@ int main(int argc, char* argv[])
     bool erro_ll1 = false;
     for (const auto& diagnostico : conflitos)
     {
-        imprimir_diagnostico(argv[2], diagnostico);
+        imprimir_diagnostico(opcoes.arquivo, diagnostico);
         erro_ll1 |= diagnostico.gravidade == compiladores::analysis::Gravidade::Erro;
     }
     if (erro_ll1)
     {
-        std::println(stderr,
-            "{}: a gramatica nao e LL(1); nenhum codigo foi gerado", argv[2]);
+        std::println(stderr, "{}: a gramatica nao e LL(1); nenhum codigo foi gerado",
+                     opcoes.arquivo);
+        return EXIT_FAILURE;
+    }
+    if (opcoes.prefixo.empty()) return EXIT_SUCCESS;
+
+    const std::filesystem::path prefixo{opcoes.prefixo};
+    auto gerados = compiladores::codegen::gerar(
+        *gramatica, *analise, prefixo.filename().string() + ".h", opcoes.tree);
+    if (!gerados)
+    {
+        std::println(stderr, "{}: erro: {}", opcoes.arquivo, gerados.error());
+        return EXIT_FAILURE;
+    }
+
+    const auto parent = prefixo.parent_path();
+    if (!parent.empty())
+    {
+        std::error_code ec;
+        std::filesystem::create_directories(parent, ec);
+        if (ec)
+        {
+            std::println(stderr, "gerador: nao foi possivel criar diretorio {}: {}",
+                         parent.string(), ec.message());
+            return EXIT_FAILURE;
+        }
+    }
+    if (!salvar(prefixo.string() + ".h", gerados -> cabecalho) ||
+        !salvar(prefixo.string() + ".c", gerados -> fonte))
+    {
+        std::println(stderr, "gerador: erro ao gravar {}.c/.h", prefixo.string());
         return EXIT_FAILURE;
     }
     return EXIT_SUCCESS;

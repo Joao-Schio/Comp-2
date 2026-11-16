@@ -57,3 +57,26 @@ add_test(NAME LL1.OpcionalGuloso COMMAND teste_ll1 opcional_guloso)
 add_test(NAME LL1.RepeticaoGulosa COMMAND teste_ll1 repeticao_gulosa)
 add_test(NAME LL1.RepeticaoValida COMMAND teste_ll1 repeticao_valida)
 add_test(NAME LL1.ElsePendente COMMAND teste_ll1 else_pendente)
+
+# Determinizacao de regex em C++: um caso independente por chamada.
+add_executable(teste_regex RegexTests.cpp)
+configurar_alvo_cpp23(teste_regex)
+target_link_libraries(teste_regex PRIVATE compiladores_core)
+foreach(caso digits identifier whitespace group optional negated dot slash empty inverted unclosed unsupported)
+    add_test(NAME Regex.${caso} COMMAND teste_regex ${caso})
+endforeach()
+
+# Executa o gerador, compila o ANSI C gerado com flags estritas e compara
+# a saida com os casos de referencia e cenarios de regressao.
+find_program(COMP2_C89_COMPILER NAMES gcc clang cc)
+if(COMP2_C89_COMPILER)
+    add_test(NAME Gerador.EndToEnd
+        COMMAND ${CMAKE_COMMAND}
+            "-DGERADOR=$<TARGET_FILE:gerador>"
+            "-DC89_COMPILER=${COMP2_C89_COMPILER}"
+            "-DROOT=${CMAKE_SOURCE_DIR}"
+            "-DOUTPUT=${CMAKE_CURRENT_BINARY_DIR}/gerados"
+            -P "${CMAKE_CURRENT_SOURCE_DIR}/GeneratedEndToEnd.cmake")
+else()
+    message(STATUS "Nao ha compilador de ANSI C disponivel: teste end-to-end desabilitado")
+endif()

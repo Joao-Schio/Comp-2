@@ -40,6 +40,8 @@ add_library(compiladores_core STATIC
     src/ebnf/Parser.cpp
     src/analysis/Analise.cpp
     src/analysis/LL1.cpp
+    src/codegen/Regex.cpp
+    src/codegen/Gerador.cpp
 )
 configurar_alvo_cpp23(compiladores_core)
 

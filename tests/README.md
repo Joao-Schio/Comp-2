@@ -2,7 +2,7 @@
 
 Este diretório contém os testes da **nova implementação do gerador**, escritos em C++23 e registrados no CTest. A finalidade é verificar cada etapa isoladamente, com falhas reproduzíveis e sem bibliotecas externas de teste.
 
-> **Autoria e uso de IA:** o conteúdo dos arquivos deste diretório (`CMakeLists.txt`, `LexerTests.cpp`, `ParserTests.cpp`, `AnaliseTests.cpp`, `LL1Tests.cpp` e este `README.md`) foi produzido pelo ChatGPT (GPT-6) a pedido do aluno, que revisa e decide sobre a integração das alterações. Consulte [`USO_IA.md`](../USO_IA.md) para o histórico. Esta declaração **não** se estende ao diretório `testes/`, que contém os casos e resultados de referência do trabalho.
+> **Autoria e uso de IA:** o conteúdo dos arquivos deste diretório (`CMakeLists.txt`, `LexerTests.cpp`, `ParserTests.cpp`, `AnaliseTests.cpp`, `LL1Tests.cpp`, `RegexTests.cpp`, `GeneratedEndToEnd.cmake`, os arquivos em `fixtures/` e este `README.md`) foi produzido pelo ChatGPT (GPT-6) a pedido do aluno, que revisa e decide sobre a integração das alterações. Consulte [`USO_IA.md`](../USO_IA.md) para o histórico. Esta declaração **não** se estende ao diretório `testes/`, que contém os casos e resultados de referência do trabalho.
 
 ## Compilar e executar
 
@@ -27,6 +27,8 @@ ctest --test-dir build -R '^Lexer\.' --output-on-failure
 ctest --test-dir build -R '^Parser\.' --output-on-failure
 ctest --test-dir build -R '^Analise\.' --output-on-failure
 ctest --test-dir build -R '^LL1\.' --output-on-failure
+ctest --test-dir build -R '^Regex\.' --output-on-failure
+ctest --test-dir build -R '^Gerador\.' --output-on-failure
 ```
 
 Os testes são compilados com as opções de C++23 do projeto e, na configuração Debug para GCC/Clang, com `-Wall -Wextra -Werror -pedantic`. O compilador e a biblioteca padrão precisam suportar os recursos de C++23 utilizados pelo código.
@@ -39,7 +41,9 @@ Os testes são compilados com as opções de C++23 do projeto e, na configuraç�
 | `ParserTests.cpp` | `teste_parser` | 8 | Construção da árvore EBNF, agrupamentos, alternativas vazias, tokens externos e erros sintáticos |
 | `AnaliseTests.cpp` | `teste_analise` | 14 | Verificações semânticas, anulabilidade, FIRST/FOLLOW, referências, alcançabilidade e recursão à esquerda |
 | `LL1Tests.cpp` | `teste_ll1` | 10 | Conflitos LL(1), alternativas anuláveis e avisos de escolha gulosa |
-| `CMakeLists.txt` | — | **36 no total** | Compila os quatro executáveis e registra cada caso separadamente no CTest |
+| `RegexTests.cpp` | `teste_regex` | 12 | Regex compilada como automato deterministico, escapes, classes e entradas invalidas |
+| `GeneratedEndToEnd.cmake` e `fixtures/` | `gerador` e compilador ANSI C | 1 | Gera e compila parsers; compara sete programas de expressao com os resultados de referencia, e valida outras construcoes |
+| `CMakeLists.txt` | — | **49 no total** | Registra todos os casos separadamente no CTest |
 
 Cada executável recebe **um identificador de caso** como argumento. Por exemplo, depois da compilação:
 
@@ -55,13 +59,13 @@ O CTest normalmente é preferível porque executa e identifica cada cenário de 
 - **`tests/` (este diretório):** testes unitários e de componentes da implementação em C++23, integrados ao CTest.
 - **`testes/` (na raiz):** gramáticas, programas e arquivos de saída esperada fornecidos para validar o **comportamento completo** do gerador e dos parsers produzidos. O script `testes/executar.sh` compara saídas textuais, diagnósticos e códigos de saída. Ele **não é executado automaticamente** pelos casos CTest aqui definidos.
 
-Por enquanto, os testes deste diretório cobrem lexer, parser EBNF, análise semântica, conjuntos e verificação LL(1). Eles não comprovam, por si só, a geração e execução de um analisador ANSI C. Essa parte deve ser validada com os casos de integração quando a geração estiver implementada.
+Os testes deste diretório cobrem também a construção de autômatos de expressões regulares e a geração ANSI C. O teste `Gerador.EndToEnd` executa o próprio `gerador`, compila o `.c` produzido com `-ansi -pedantic -Wall -Wextra -Werror` (quando houver GCC, Clang ou `cc` disponível) e compara a saída dos programas de expressão com a referência fornecida em `testes/programas/expr/`. Ele não cobre a integração com o scanner externo de Micro C, ainda pendente.
 
 ## Como acrescentar um caso
 
 1. Adicione uma função de teste no arquivo `*Tests.cpp` da etapa correspondente; a função deve indicar sucesso ou falha e conferir o comportamento observável.
 2. Registre um identificador novo no despachante do executável (o `main` do arquivo).
-3. Acrescente uma chamada `add_test(NAME ... COMMAND ...)` em `tests/CMakeLists.txt`, passando o identificador novo.
+3. Acrescente uma chamada `add_test(NAME ... COMMAND ...)` em `tests/CMakeLists.txt`, passando o identificador novo. Para testes de geração, amplie `GeneratedEndToEnd.cmake`.
 4. Recompile e execute `ctest --test-dir build --output-on-failure`.
 
 Prefira casos pequenos que isolem uma propriedade e incluam entradas inválidas além das válidas. Para diagnósticos relevantes, confira também posição, gravidade e mensagem. Para tabelas de FIRST/FOLLOW, compare a formatação quando ela faz parte do contrato do trabalho.
