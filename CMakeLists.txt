@@ -34,10 +34,10 @@ function(configurar_alvo_cpp23 alvo)
     endif()
 endfunction()
 
-# Nucleo compartilhado entre o executavel e os testes; adicionar futuros .cpp
-# do parser e das analises aqui, sem incluir main.cpp na biblioteca.
+# Nucleo compartilhado entre o executavel e os testes.
 add_library(compiladores_core STATIC
     src/ebnf/Lexer.cpp
+    src/ebnf/Parser.cpp
 )
 configurar_alvo_cpp23(compiladores_core)
 
