@@ -2,7 +2,7 @@
 
 Este diretório contém os testes da **nova implementação do gerador**, escritos em C++23 e registrados no CTest. A finalidade é verificar cada etapa isoladamente, com falhas reproduzíveis e sem bibliotecas externas de teste.
 
-> **Autoria e uso de IA:** o conteúdo dos arquivos deste diretório (`CMakeLists.txt`, `LexerTests.cpp`, `ParserTests.cpp`, `AnaliseTests.cpp`, `LL1Tests.cpp`, `RegexTests.cpp`, `GeneratedEndToEnd.cmake`, os arquivos em `fixtures/` e este `README.md`) foi produzido pelo ChatGPT (GPT-6) a pedido do aluno, que revisa e decide sobre a integração das alterações. Consulte [`USO_IA.md`](../USO_IA.md) para o histórico. Esta declaração **não** se estende ao diretório `testes/`, que contém os casos e resultados de referência do trabalho.
+> **Autoria e uso de IA:** o conteúdo dos arquivos deste diretório (`CMakeLists.txt`, `LexerTests.cpp`, `ParserTests.cpp`, `AnaliseTests.cpp`, `LL1Tests.cpp`, `RegexTests.cpp`, `GeneratedEndToEnd.cmake`, `MicroCIntegration.cmake`, os arquivos em `fixtures/` e este `README.md`) foi produzido pelo ChatGPT (GPT-6) a pedido do aluno, que revisa e decide sobre a integração das alterações. Consulte [`USO_IA.md`](../USO_IA.md) para o histórico. Esta declaração **não** se estende ao diretório `testes/`, que contém os casos e resultados de referência do trabalho.
 
 ## Compilar e executar
 
@@ -43,7 +43,8 @@ Os testes são compilados com as opções de C++23 do projeto e, na configuraç�
 | `LL1Tests.cpp` | `teste_ll1` | 10 | Conflitos LL(1), alternativas anuláveis e avisos de escolha gulosa |
 | `RegexTests.cpp` | `teste_regex` | 12 | Regex compilada como automato deterministico, escapes, classes e entradas invalidas |
 | `GeneratedEndToEnd.cmake` e `fixtures/` | `gerador` e compilador ANSI C | 1 | Gera e compila parsers; compara sete programas de expressao com os resultados de referencia, e valida outras construcoes |
-| `CMakeLists.txt` | — | **49 no total** | Registra todos os casos separadamente no CTest |
+| `MicroCIntegration.cmake` | `parser_microc` | 1 | Compila o parser Micro C com o scanner do TP1 e compara os seis programas com os resultados de referencia |
+| `CMakeLists.txt` | — | **50 no total** | Registra todos os casos separadamente no CTest |
 
 Cada executável recebe **um identificador de caso** como argumento. Por exemplo, depois da compilação:
 
@@ -59,7 +60,7 @@ O CTest normalmente é preferível porque executa e identifica cada cenário de 
 - **`tests/` (este diretório):** testes unitários e de componentes da implementação em C++23, integrados ao CTest.
 - **`testes/` (na raiz):** gramáticas, programas e arquivos de saída esperada fornecidos para validar o **comportamento completo** do gerador e dos parsers produzidos. O script `testes/executar.sh` compara saídas textuais, diagnósticos e códigos de saída. Ele **não é executado automaticamente** pelos casos CTest aqui definidos.
 
-Os testes deste diretório cobrem também a construção de autômatos de expressões regulares e a geração ANSI C. O teste `Gerador.EndToEnd` executa o próprio `gerador`, compila o `.c` produzido com `-ansi -pedantic -Wall -Wextra -Werror` (quando houver GCC, Clang ou `cc` disponível) e compara a saída dos programas de expressão com a referência fornecida em `testes/programas/expr/`. Ele não cobre a integração com o scanner externo de Micro C, ainda pendente.
+Os testes deste diretório cobrem também a construção de autômatos de expressões regulares e a geração ANSI C. O teste `Gerador.EndToEnd` executa o próprio `gerador`, compila o `.c` produzido com `-ansi -pedantic -Wall -Wextra -Werror` (quando houver GCC, Clang ou `cc` disponível) e compara a saída dos programas de expressão com a referência fornecida em `testes/programas/expr/`. O teste `MicroC.EndToEnd` cobre a integracao com o scanner externo de Micro C, comparando seis programas com as saidas de referencia, quando `microc/lex.yy.c` estiver disponivel. O adaptador e documentado em `microc/INTEGRACAO.md`.
 
 ## Como acrescentar um caso
 

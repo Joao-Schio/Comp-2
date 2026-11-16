@@ -1,0 +1,15 @@
+# Verifica o resultado real dos programas de referencia do TP2.
+foreach(caso IN ITEMS soma bubble else_pendente rejeitado_lexico rejeitado_sintaxe rejeitado_declaracao)
+    set(entrada "${ROOT}/testes/programas/microc/${caso}.mc")
+    set(esperado "${ROOT}/testes/programas/microc/${caso}.esperado")
+    if(NOT EXISTS "${entrada}" OR NOT EXISTS "${esperado}")
+        message(FATAL_ERROR "Fixture Micro C ausente: ${caso}")
+    endif()
+    execute_process(COMMAND "${PARSER}" "${entrada}"
+        RESULT_VARIABLE codigo OUTPUT_VARIABLE out ERROR_VARIABLE err)
+    string(CONCAT obtido "${out}" "${err}" "status ${codigo}\n")
+    file(READ "${esperado}" referencia)
+    if(NOT obtido STREQUAL referencia)
+        message(FATAL_ERROR "Micro C ${caso}: resultado divergente\nOBTIDO:\n${obtido}\nESPERADO:\n${referencia}")
+    endif()
+endforeach()

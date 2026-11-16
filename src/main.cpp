@@ -22,14 +22,14 @@ struct Opcoes
     bool check{};
     bool parse_only{};
     bool tree{};
+    bool scanner_microc{};
 };
 
 void uso()
 {
     std::println(stderr,
-        "uso: gerador gramatica.ebnf -o prefixo [--sets] [--tree]\n"
-        "     gerador --check|--sets|--parse-only gramatica.ebnf\n"
-        "     --scanner microc e --debug ainda nao estao disponiveis");
+        "uso: gerador gramatica.ebnf -o prefixo [--sets] [--tree] [--scanner microc]\n"
+        "     gerador --check|--sets|--parse-only gramatica.ebnf");
 }
 
 [[nodiscard]] bool ler_argumentos(int argc, char* argv[], Opcoes& opcoes)
@@ -43,6 +43,11 @@ void uso()
         else if (argumento == "--check") opcoes.check = true;
         else if (argumento == "--parse-only") opcoes.parse_only = true;
         else if (argumento == "--tree") opcoes.tree = true;
+        else if (argumento == "--scanner" && i + 1 < argc)
+        {
+            if (std::string_view{argv[++i]} != "microc") return false;
+            opcoes.scanner_microc = true;
+        }
         else if (argumento.starts_with('-')) return false;
         else if (opcoes.arquivo.empty()) opcoes.arquivo = argumento;
         else return false;
@@ -113,6 +118,15 @@ int main(int argc, char* argv[])
                      gramatica -> tokens.size(), gramatica -> skips.size(),
                      gramatica -> regras.size());
         return EXIT_SUCCESS;
+    }
+
+    if (opcoes.scanner_microc != gramatica -> tokens_externos.has_value())
+    {
+        std::println(stderr, "{}: erro: {}", opcoes.arquivo,
+            opcoes.scanner_microc
+                ? "--scanner microc exige TOKENS EXTERN"
+                : "TOKENS EXTERN exige --scanner microc");
+        return EXIT_FAILURE;
     }
 
     auto analise = compiladores::analysis::analisar_gramatica(*gramatica);

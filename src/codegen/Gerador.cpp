@@ -109,7 +109,10 @@ public:
     [[nodiscard]] std::expected<ArquivosGerados, std::string> executar()
     {
         if (_gramatica.tokens_externos)
-            return std::unexpected("TOKENS EXTERN requer integracao com scanner Micro C (ainda nao implementada)");
+        {
+            auto validacao = validar_tokens_microc();
+            if (!validacao) return std::unexpected(std::move(validacao.error()));
+        }
         auto lexico = preparar_lexico();
         if (!lexico) return std::unexpected(std::move(lexico.error()));
         gerar_cabecalho();
@@ -127,8 +130,58 @@ private:
     std::string _cabecalho;
     std::string _fonte;
 
+    // A numeracao de tokens faz parte do contrato do scanner legado do TP1.
+    // Nao alteramos o submodulo: a tabela fica isolada neste backend.
+    [[nodiscard]] static std::optional<std::string_view> literal_microc(std::string_view literal)
+    {
+        static constexpr std::pair<std::string_view, std::string_view> mapa[] = {
+            {"+", "PLUS"}, {"-", "MINUS"}, {"*", "MUL"}, {"/", "DIV"},
+            {"%", "MOD"}, {"==", "EQ"}, {"!=", "NEQ"}, {"<", "LT"},
+            {">", "GT"}, {"<=", "LEQ"}, {">=", "GEQ"},
+            {"&&", "AND"}, {"||", "OR"}, {"!", "NOT"},
+            {"=", "ASSIGN"}, {";", "SEMICOLON"}, {",", "COMMA"},
+            {"(", "LPAREN"}, {")", "RPAREN"}, {"{", "LBRACE"},
+            {"}", "RBRACE"}, {"[", "LBRACKET"}, {"]", "RBRACKET"},
+            {"main", "MAIN"}, {"if", "IF"}, {"else", "ELSE"},
+            {"for", "FOR"}, {"return", "RETURN"}, {"int", "INT"},
+            {"char", "CHAR"}, {"print", "PRINT"}
+        };
+        for (const auto& [texto, nome] : mapa)
+            if (texto == literal) return nome;
+        return std::nullopt;
+    }
+
+    [[nodiscard]] std::expected<void, std::string> validar_tokens_microc() const
+    {
+        static constexpr std::string_view nomeados[] = {
+            "UNDEF", "ID", "INTEGERCONST", "CHARCONST", "STRINGCONST",
+            "PLUS", "MINUS", "MUL", "DIV", "MOD", "EQ", "NEQ",
+            "LT", "GT", "LEQ", "GEQ", "AND", "OR", "NOT",
+            "ASSIGN", "SEMICOLON", "COMMA", "LPAREN", "RPAREN",
+            "LBRACE", "RBRACE", "LBRACKET", "RBRACKET",
+            "MAIN", "IF", "ELSE", "FOR", "RETURN", "INT", "CHAR", "PRINT"
+        };
+        for (const auto& token : _analise.terminais)
+        {
+            if (token.tipo == analysis::TipoTerminal::Fim) continue;
+            if (token.tipo == analysis::TipoTerminal::Literal)
+            {
+                if (!literal_microc(token.nome))
+                    return std::unexpected(std::format(
+                        "literal '{}' nao pertence ao vocabulario Micro C", token.nome));
+            }
+            else if (std::ranges::find(nomeados, token.nome) == std::end(nomeados))
+            {
+                return std::unexpected(std::format(
+                    "terminal '{}' nao existe no scanner Micro C", token.nome));
+            }
+        }
+        return {};
+    }
+
     [[nodiscard]] std::expected<void, std::string> preparar_lexico()
     {
+        if (_gramatica.tokens_externos) return {};
         for (std::size_t i = 0; i < _gramatica.skips.size(); ++i)
         {
             auto dfa = compilar_regex(_gramatica.skips[i].regex);
@@ -147,6 +200,13 @@ private:
     [[nodiscard]] std::string nome_tipo(std::size_t indice) const
     {
         const auto& token = _analise.terminais[indice];
+        if (_gramatica.tokens_externos)
+        {
+            if (token.tipo == analysis::TipoTerminal::Fim) return "END_OF_FILE";
+            if (token.tipo == analysis::TipoTerminal::Literal)
+                return std::string{*literal_microc(token.nome)};
+            return token.nome;
+        }
         if (token.tipo == analysis::TipoTerminal::Fim) return "T_FIM";
         if (token.tipo == analysis::TipoTerminal::Literal)
             return std::format("T_LIT_{}", indice);
@@ -179,16 +239,24 @@ private:
     void gerar_cabecalho()
     {
         _cabecalho = "/* Parser gerado automaticamente em ANSI C89. */\n"
-            "#ifndef COMP2_PARSER_GERADO_H\n#define COMP2_PARSER_GERADO_H\n\n"
-            "typedef enum {\n";
-        for (std::size_t i = 0; i < _analise.terminais.size(); ++i)
+            "#ifndef COMP2_PARSER_GERADO_H\n#define COMP2_PARSER_GERADO_H\n\n";
+        if (_gramatica.tokens_externos)
         {
-            linha(_cabecalho, 1, std::format("{} = {}{}", nome_tipo(i), i,
-                i + 1 == _analise.terminais.size() ? "" : ","));
+            _cabecalho += "#include \"scanner.h\" /* adaptador do scanner Micro C */\n"
+                "#define TOKEN_FIM END_OF_FILE\n\n";
         }
-        _cabecalho += "} TipoToken;\n\ntypedef struct {\n"
-            "    int tipo;\n    char lexema[100];\n    int linha;\n    int coluna;\n"
-            "} Token;\n\n#define TOKEN_FIM T_FIM\n\n";
+        else
+        {
+            _cabecalho += "typedef enum {\n";
+            for (std::size_t i = 0; i < _analise.terminais.size(); ++i)
+            {
+                linha(_cabecalho, 1, std::format("{} = {}{}", nome_tipo(i), i,
+                    i + 1 == _analise.terminais.size() ? "" : ","));
+            }
+            _cabecalho += "} TipoToken;\n\ntypedef struct {\n"
+                "    int tipo;\n    char lexema[100];\n    int linha;\n    int coluna;\n"
+                "} Token;\n\n#define TOKEN_FIM T_FIM\n\n";
+        }
         _cabecalho += "const char *nome_token(int tipo);\n";
         for (const auto& regra : _gramatica.regras)
             _cabecalho += std::format("void parse_{}(void);\n", regra.nome);
@@ -294,7 +362,10 @@ static Token tok;
 static int imprimir_arvore = 0;
 static int nivel_arvore = 0;
 static FILE *arquivo_tokens = NULL;
-static char *fonte = NULL;
+)C";
+        if (!_gramatica.tokens_externos)
+        {
+            _fonte += R"C(static char *fonte = NULL;
 static size_t pos = 0;
 static int linha = 1, coluna = 1;
 
@@ -326,9 +397,10 @@ static void consumir_entrada(size_t tamanho)
 }
 
 )C";
-        for (std::size_t i = 0; i < _automatos.size(); ++i)
-            emitir_automato(_fonte, _automatos[i], i);
-        gerar_lexico();
+            for (std::size_t i = 0; i < _automatos.size(); ++i)
+                emitir_automato(_fonte, _automatos[i], i);
+            gerar_lexico();
+        }
         gerar_primitivas();
         _fonte += "\n" + corpo;
         gerar_main();
@@ -421,8 +493,11 @@ int pertence(int tipo, const int *conjunto)
 
 static void escrever_posicao(void)
 {
-    fprintf(stderr, "linha %d, coluna %d: ", tok.linha, tok.coluna);
-}
+)C";
+        _fonte += _gramatica.tokens_externos
+            ? "    fprintf(stderr, \"linha %d: \", tok.linha);\n"
+            : "    fprintf(stderr, \"linha %d, coluna %d: \", tok.linha, tok.coluna);\n";
+        _fonte += R"C(}
 
 static void erro_sintatico(const int *esperados)
 {
@@ -473,25 +548,39 @@ static Token token_de_arquivo(void)
         }
         t.tipo = numero;
         t.linha = linha_token;
-        t.coluna = 1;
-        return t;
+)C";
+        if (!_gramatica.tokens_externos) _fonte += "        t.coluna = 1;\n";
+        _fonte += R"C(        return t;
     }
     t.tipo = TOKEN_FIM;
     t.linha = linha_arquivo + 1;
-    t.coluna = 1;
-    return t;
+)C";
+        if (!_gramatica.tokens_externos) _fonte += "    t.coluna = 1;\n";
+        _fonte += R"C(    return t;
 }
 
 static void avancar(void)
 {
     if (arquivo_tokens != NULL) tok = token_de_arquivo();
-    else tok = proximo_token_gerado();
+    else {
+)C";
+        if (_gramatica.tokens_externos)
+        {
+            _fonte += R"C(        tok = proximo_token();
+        if (tok.tipo == UNDEF) {
+            fprintf(stderr, "linha %d: erro lexico: %s\n", tok.linha, tok.lexema);
+            exit(EXIT_FAILURE);
+        }
+)C";
+        }
+        else _fonte += "        tok = proximo_token_gerado();\n";
+        _fonte += R"C(    }
 }
 
 void match(int esperado)
 {
     int lista[2];
-    if (tok.tipo != esperado) {
+    if ((int)tok.tipo != esperado) {
         lista[0] = esperado;
         lista[1] = -1;
         erro_sintatico(lista);
@@ -537,8 +626,12 @@ void match(int esperado)
             fprintf(stderr, "nao foi possivel abrir %s\n", arquivo);
             return 2;
         }
-        fonte = ler_tudo(entrada);
-    }
+        )C";
+        if (_gramatica.tokens_externos)
+            _fonte += "scanner_iniciar(entrada);\n";
+        else
+            _fonte += "fonte = ler_tudo(entrada);\n";
+        _fonte += R"C(    }
     avancar();
 )C";
         _fonte += std::format("    parse_{}();\n", _gramatica.regras.front().nome);
@@ -549,7 +642,14 @@ void match(int esperado)
     }
     printf("entrada aceita\n");
     if (arquivo_tokens != NULL) fclose(arquivo_tokens);
-    else { free(fonte); if (entrada != stdin) fclose(entrada); }
+    else {
+)C";
+        if (_gramatica.tokens_externos)
+            _fonte += "        scanner_finalizar();\n";
+        else
+            _fonte += "        free(fonte);\n";
+        _fonte += R"C(        if (entrada != stdin) fclose(entrada);
+    }
     return 0;
 }
 )C";

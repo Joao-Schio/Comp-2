@@ -80,3 +80,11 @@ if(COMP2_C89_COMPILER)
 else()
     message(STATUS "Nao ha compilador de ANSI C disponivel: teste end-to-end desabilitado")
 endif()
+
+if(TARGET parser_microc)
+    add_test(NAME MicroC.EndToEnd
+        COMMAND "${CMAKE_COMMAND}"
+            "-DPARSER=$<TARGET_FILE:parser_microc>"
+            "-DROOT=${CMAKE_SOURCE_DIR}"
+            -P "${CMAKE_CURRENT_SOURCE_DIR}/MicroCIntegration.cmake")
+endif()
